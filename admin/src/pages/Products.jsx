@@ -40,8 +40,10 @@ const Products = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingProduct, setEditingProduct] = useState(null);
     const [showVariantModal, setShowVariantModal] = useState(false);
+    const [showReviewModal, setShowReviewModal] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [variants, setVariants] = useState([]);
+    const [reviews, setReviews] = useState([]);
     const [notification, setNotification] = useState(null);
 
     const token = localStorage.getItem('adminToken');
@@ -103,6 +105,18 @@ const Products = () => {
         }
     };
 
+    const openReviews = async (product) => {
+        setSelectedProduct(product);
+        setShowReviewModal(true);
+        try {
+            const res = await fetch(`${API}/reviews/admin/product/${product.id}`, { headers });
+            const data = await res.json();
+            setReviews(data.data || []);
+        } catch (err) {
+            console.error('Failed to fetch reviews:', err);
+        }
+    };
+
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar />
@@ -160,6 +174,7 @@ const Products = () => {
                                 onEdit={() => { setEditingProduct(product); setShowModal(true); }}
                                 onDelete={() => handleDelete(product.id)}
                                 onVariants={() => openVariants(product)}
+                                onReviews={() => openReviews(product)}
                             />
                         ))}
                     </div>
@@ -188,6 +203,22 @@ const Products = () => {
                             const res = await fetch(`${API}/variants/product/${selectedProduct.id}`, { headers });
                             const data = await res.json();
                             setVariants(data.data?.variants || []);
+                        }}
+                        showNotification={showNotification}
+                    />
+                )}
+
+                {/* Review Modal */}
+                {showReviewModal && selectedProduct && (
+                    <ReviewModal
+                        product={selectedProduct}
+                        reviews={reviews}
+                        token={token}
+                        onClose={() => { setShowReviewModal(false); setSelectedProduct(null); setReviews([]); }}
+                        onRefresh={async () => {
+                            const res = await fetch(`${API}/reviews/admin/product/${selectedProduct.id}`, { headers });
+                            const data = await res.json();
+                            setReviews(data.data || []);
                         }}
                         showNotification={showNotification}
                     />
@@ -261,7 +292,11 @@ const ProductCard = ({ product, onEdit, onDelete, onVariants }) => {
                     <button onClick={onVariants} style={{
                         flex: 1, padding: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0',
                         borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#3b82f6'
-                    }}>📐 Sizes & Stock</button>
+                    }}>📐 Sizes</button>
+                    <button onClick={onReviews} style={{
+                        flex: 1, padding: '8px', background: '#fef3c7', border: '1px solid #fde68a',
+                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#d97706'
+                    }}>⭐ Reviews</button>
                     <button onClick={onEdit} style={{
                         flex: 1, padding: '8px', background: '#eff6ff', border: '1px solid #bfdbfe',
                         borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#2563eb'
@@ -772,6 +807,108 @@ const VariantModal = ({ product, variants, token, onClose, onRefresh, showNotifi
                                         padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca',
                                         borderRadius: '6px', fontSize: '11px', cursor: 'pointer', color: '#dc2626'
                                     }}>🗑️</button>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
+
+/* ===================== REVIEW MODAL ===================== */
+const ReviewModal = ({ product, reviews, token, onClose, onRefresh, showNotification }) => {
+    
+    const deleteReview = async (reviewId) => {
+        if (!window.confirm('Are you sure you want to delete this customer review?')) return;
+        try {
+            const res = await fetch(`${API}/reviews/${reviewId}`, {
+                method: 'DELETE',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (res.ok) {
+                showNotification('Review deleted');
+                onRefresh();
+            } else {
+                showNotification('Failed to delete review', 'error');
+            }
+        } catch (err) {
+            showNotification('Failed to delete review', 'error');
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
+            display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
+            padding: '40px 20px', zIndex: 1000, overflowY: 'auto'
+        }}>
+            <div style={{
+                background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+            }}>
+                <div style={{
+                    padding: '24px 28px', borderBottom: '1px solid #e2e8f0',
+                    display: 'flex', justifyContent: 'space-between', alignItems: 'center'
+                }}>
+                    <div>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Customer Reviews</h2>
+                        <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>{product.title}</p>
+                    </div>
+                    <button onClick={onClose} style={{
+                        width: '36px', height: '36px', borderRadius: '10px',
+                        background: '#f1f5f9', border: 'none', fontSize: '18px', cursor: 'pointer'
+                    }}>✕</button>
+                </div>
+
+                <div style={{ padding: '24px 28px', maxHeight: '60vh', overflowY: 'auto' }}>
+                    {reviews.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                            <div style={{ fontSize: '40px', marginBottom: '12px' }}>⭐</div>
+                            <p>No reviews yet for this product.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                            {reviews.map(review => (
+                                <div key={review.id} style={{
+                                    border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px',
+                                    background: '#fafbfc', position: 'relative'
+                                }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{
+                                                background: review.rating >= 4 ? '#16a34a' : review.rating === 3 ? '#fbbf24' : '#dc2626',
+                                                color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 700
+                                            }}>
+                                                {review.rating} ★
+                                            </div>
+                                            <span style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{review.user_name}</span>
+                                        </div>
+                                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                            {new Date(review.created_at).toLocaleDateString()}
+                                        </span>
+                                    </div>
+                                    
+                                    {review.comment && (
+                                        <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, marginBottom: '0' }}>
+                                            {review.comment}
+                                        </p>
+                                    )}
+
+                                    <button 
+                                        onClick={() => deleteReview(review.id)}
+                                        style={{
+                                            position: 'absolute', top: '16px', right: '16px',
+                                            background: '#fee2e2', border: 'none', color: '#dc2626',
+                                            width: '24px', height: '24px', borderRadius: '4px',
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            cursor: 'pointer', fontSize: '12px'
+                                        }}
+                                        title="Delete Review"
+                                    >
+                                        ✕
+                                    </button>
                                 </div>
                             ))}
                         </div>

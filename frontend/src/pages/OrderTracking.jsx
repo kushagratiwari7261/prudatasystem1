@@ -26,6 +26,11 @@ const OrderTracking = () => {
     const { id } = useParams();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [reviewProduct, setReviewProduct] = useState(null);
+    const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+    const [submittingReview, setSubmittingReview] = useState(false);
+    
     const token = localStorage.getItem('accessToken');
 
     useEffect(() => {
@@ -38,7 +43,46 @@ const OrderTracking = () => {
                 setLoading(false);
             })
             .catch(() => setLoading(false));
-    }, [id]);
+    }, [id, token]);
+
+    const handleOpenReview = (item) => {
+        setReviewProduct(item);
+        setReviewData({ rating: 5, comment: '' });
+        setReviewModalOpen(true);
+    };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        if (!reviewData.rating) return alert('Please provide a star rating.');
+        
+        setSubmittingReview(true);
+        try {
+            const res = await fetch(`${API}/reviews`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    product_id: reviewProduct.product_id || reviewProduct.product?.id,
+                    rating: reviewData.rating,
+                    comment: reviewData.comment
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert('Thank you for your review!');
+                setReviewModalOpen(false);
+            } else {
+                alert(data.message || 'Failed to submit review');
+            }
+        } catch (error) {
+            alert('Failed to submit review. Server error.');
+            console.error(error);
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
 
     if (loading) return <div className="spinner-container"><div className="spinner" /></div>;
 
@@ -136,7 +180,18 @@ const OrderTracking = () => {
                                     <div style={{ fontSize: '13px', color: '#94969f' }}>
                                         {item.size && `Size: ${item.size}`} {item.quantity && `• Qty: ${item.quantity}`}
                                     </div>
-                                    <div style={{ fontWeight: 700, marginTop: '6px' }}>₹{item.price || item.total || 0}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
+                                        <div style={{ fontWeight: 700 }}>₹{item.price || item.total || 0}</div>
+                                        {status === 'delivered' && (
+                                            <button 
+                                                className="btn-secondary" 
+                                                style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid #ff3f6c', color: '#ff3f6c', backgroundColor: 'transparent' }}
+                                                onClick={() => handleOpenReview(item)}
+                                            >
+                                                ★ Rate & Review
+                                            </button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         );
@@ -209,6 +264,61 @@ const OrderTracking = () => {
                     </Link>
                 </div>
             </div>
+
+            {/* Review Modal */}
+            {reviewModalOpen && reviewProduct && (
+                <div className="modal-overlay">
+                    <div className="modal" style={{ maxWidth: '400px', width: '90%' }}>
+                        <div className="modal-header">
+                            <h3 className="modal-title">Rate Product</h3>
+                            <button className="modal-close" onClick={() => setReviewModalOpen(false)}>×</button>
+                        </div>
+                        <form onSubmit={handleSubmitReview} className="modal-body">
+                            <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', alignItems: 'center' }}>
+                                <img 
+                                    src={getFullImageUrl(reviewProduct.image_url || reviewProduct.image || reviewProduct.product?.images?.[0]?.url)} 
+                                    alt="Product" 
+                                    style={{ width: '60px', height: '80px', objectFit: 'cover', borderRadius: '4px' }}
+                                />
+                                <div>
+                                    <div style={{ fontSize: '13px', fontWeight: 700 }}>{reviewProduct.brand || reviewProduct.product?.brand?.name}</div>
+                                    <div style={{ fontSize: '14px', color: '#535766', lineHeight: 1.4 }}>{reviewProduct.product_name || reviewProduct.name || reviewProduct.product?.name}</div>
+                                </div>
+                            </div>
+
+                            <div className="form-group" style={{ textAlign: 'center' }}>
+                                <label className="form-label">How would you rate this?</label>
+                                <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', fontSize: '32px', margin: '16px 0', cursor: 'pointer' }}>
+                                    {[1, 2, 3, 4, 5].map(star => (
+                                        <span 
+                                            key={star} 
+                                            onClick={() => setReviewData(prev => ({ ...prev, rating: star }))}
+                                            style={{ color: star <= reviewData.rating ? '#ff9900' : '#d4d5d9' }}
+                                        >
+                                            ★
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="form-group">
+                                <label className="form-label">Write your review (Optional)</label>
+                                <textarea
+                                    className="form-input"
+                                    rows="4"
+                                    placeholder="What did you like or dislike about the product?"
+                                    value={reviewData.comment}
+                                    onChange={(e) => setReviewData(prev => ({ ...prev, comment: e.target.value }))}
+                                />
+                            </div>
+
+                            <button type="submit" className="btn-primary" style={{ width: '100%', marginTop: '16px' }} disabled={submittingReview}>
+                                {submittingReview ? 'Submitting...' : 'Submit Review'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

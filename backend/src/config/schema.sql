@@ -332,6 +332,26 @@ CREATE TABLE payments (
 );
 
 -- ============================================================
+-- REVIEWS TABLE
+-- ============================================================
+CREATE TABLE reviews (
+  id          UUID PRIMARY KEY
+              DEFAULT uuid_generate_v4(),
+  product_id  UUID NOT NULL
+              REFERENCES products(id) ON DELETE CASCADE,
+  user_id     UUID NOT NULL
+              REFERENCES users(id) ON DELETE CASCADE,
+  rating      INT NOT NULL
+              CHECK (rating >= 1 AND rating <= 5),
+  comment     TEXT,
+  status      VARCHAR(20) DEFAULT 'approved'
+              CHECK (status IN ('pending', 'approved', 'rejected')),
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  updated_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(product_id, user_id) -- A user can only review a product once
+);
+
+-- ============================================================
 -- ALL INDEXES FOR SPEED
 -- ============================================================
 
@@ -439,6 +459,14 @@ CREATE INDEX idx_payments_rzp_payment
 CREATE INDEX idx_payments_status
   ON payments(status);
 
+-- reviews
+CREATE INDEX idx_reviews_product
+  ON reviews(product_id);
+CREATE INDEX idx_reviews_user
+  ON reviews(user_id);
+CREATE INDEX idx_reviews_status
+  ON reviews(status);
+
 -- ============================================================
 -- SEED DATA
 -- ============================================================
@@ -502,6 +530,35 @@ CREATE TRIGGER trg_orders_updated_at BEFORE UPDATE ON orders FOR EACH ROW EXECUT
 
 DROP TRIGGER IF EXISTS trg_payments_updated_at ON payments;
 CREATE TRIGGER trg_payments_updated_at BEFORE UPDATE ON payments FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+DROP TRIGGER IF EXISTS trg_reviews_updated_at ON reviews;
+CREATE TRIGGER trg_reviews_updated_at BEFORE UPDATE ON reviews FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+-- Function to auto-update rating_avg and rating_count on products table
+CREATE OR REPLACE FUNCTION update_product_rating()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+        UPDATE products 
+        SET rating_avg = (SELECT COALESCE(ROUND(AVG(rating)::numeric, 2), 0) FROM reviews WHERE product_id = NEW.product_id AND status = 'approved'),
+            rating_count = (SELECT COUNT(*) FROM reviews WHERE product_id = NEW.product_id AND status = 'approved')
+        WHERE id = NEW.product_id;
+        RETURN NEW;
+    ELSIF TG_OP = 'DELETE' THEN
+        UPDATE products 
+        SET rating_avg = (SELECT COALESCE(ROUND(AVG(rating)::numeric, 2), 0) FROM reviews WHERE product_id = OLD.product_id AND status = 'approved'),
+            rating_count = (SELECT COUNT(*) FROM reviews WHERE product_id = OLD.product_id AND status = 'approved')
+        WHERE id = OLD.product_id;
+        RETURN OLD;
+    END IF;
+    RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_update_product_rating ON reviews;
+CREATE TRIGGER trg_update_product_rating 
+AFTER INSERT OR UPDATE OR DELETE ON reviews 
+FOR EACH ROW EXECUTE FUNCTION update_product_rating();
 
 -- GRANT privileges
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO zenwair_user;

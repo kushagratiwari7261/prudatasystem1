@@ -16,6 +16,11 @@ const ProductDetail = () => {
     const [addingToCart, setAddingToCart] = useState(false);
     const [activeImage, setActiveImage] = useState(0);
     const [imageErrors, setImageErrors] = useState({});
+    
+    // Reviews State
+    const [reviews, setReviews] = useState([]);
+    const [reviewsLoading, setReviewsLoading] = useState(false);
+    const [reviewStats, setReviewStats] = useState({ avg: 0, count: 0 });
 
     // Get the base URL for images from environment or default to backend
     const IMAGE_BASE_URL = process.env.REACT_APP_API_URL
@@ -61,12 +66,33 @@ const ProductDetail = () => {
                     if (sizes.length > 0) setSelectedSize(sizes[0]);
                     if (colors.length > 0) setSelectedColor(colors[0]);
                 }
+
+                setReviewStats({ 
+                    avg: productData.rating_avg || 0, 
+                    count: productData.rating_count || 0 
+                });
+
+                fetchReviews(productData.id);
             }
         } catch (error) {
             console.error('Error fetching product:', error);
             toast.error('Failed to load product');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const fetchReviews = async (productId) => {
+        try {
+            setReviewsLoading(true);
+            const response = await API.get(`/reviews/product/${productId}`);
+            if (response.data.success) {
+                setReviews(response.data.data || []);
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+        } finally {
+            setReviewsLoading(false);
         }
     };
 
@@ -315,10 +341,18 @@ const ProductDetail = () => {
                     )}
                 </div>
 
-                {product.rating_avg > 0 && (
-                    <div className="rating">
-                        <span className="stars">{'★'.repeat(Math.round(product.rating_avg))}</span>
-                        <span className="rating-count">({product.rating_count} reviews)</span>
+                {reviewStats.count > 0 && (
+                    <div className="rating" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                        <div style={{ 
+                            background: '#03a685', color: 'white', padding: '2px 8px', 
+                            borderRadius: '4px', fontSize: '14px', fontWeight: 700,
+                            display: 'flex', alignItems: 'center', gap: '4px'
+                        }}>
+                            {reviewStats.avg} ★
+                        </div>
+                        <span style={{ fontSize: '14px', color: '#535766' }}>
+                            ({reviewStats.count} Verified Buyer{reviewStats.count > 1 ? 's' : ''})
+                        </span>
                     </div>
                 )}
 
@@ -437,6 +471,60 @@ const ProductDetail = () => {
                         )}
                     </ul>
                 </div>
+            </div>
+
+            {/* Customer Reviews Section */}
+            <div style={{ gridColumn: '1 / -1', marginTop: '40px', borderTop: '1px solid #eaeaec', paddingTop: '32px' }}>
+                <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '24px' }}>Customer Reviews</h2>
+                
+                {reviewStats.count > 0 ? (
+                    <div style={{ display: 'flex', gap: '40px' }}>
+                        <div style={{ minWidth: '200px' }}>
+                            <div style={{ fontSize: '48px', fontWeight: 300 }}>{reviewStats.avg} <span style={{ fontSize: '24px', color: '#ff9900' }}>★</span></div>
+                            <p style={{ color: '#535766' }}>Based on {reviewStats.count} verified ratings</p>
+                        </div>
+                        
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {reviewsLoading ? (
+                                <div className="spinner"></div>
+                            ) : (
+                                reviews.map(review => (
+                                    <div key={review.id} style={{ borderBottom: '1px solid #f1f2f4', paddingBottom: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                            <div style={{ 
+                                                background: review.rating >= 4 ? '#03a685' : review.rating === 3 ? '#ff9f00' : '#ff6161', 
+                                                color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', fontWeight: 700 
+                                            }}>
+                                                {review.rating} ★
+                                            </div>
+                                            <span style={{ fontWeight: 600, fontSize: '14px' }}>{review.comment ? 'Review' : 'Rating'}</span>
+                                        </div>
+                                        {review.comment && (
+                                            <p style={{ fontSize: '14px', color: '#282c3f', lineHeight: 1.5, marginBottom: '8px' }}>
+                                                {review.comment}
+                                            </p>
+                                        )}
+                                        <div style={{ fontSize: '12px', color: '#7e818c', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span>{review.user_name}</span>
+                                            <span style={{ color: '#d4d5d9' }}>|</span>
+                                            <span>{new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
+                                            <span style={{ color: '#d4d5d9' }}>|</span>
+                                            <span style={{ color: '#03a685', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                                                Verified Buyer
+                                            </span>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <div style={{ textAlign: 'center', padding: '40px 0', background: '#f5f5f6', borderRadius: '8px' }}>
+                        <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#535766' }}>No reviews yet</h4>
+                        <p style={{ color: '#94969f', marginTop: '8px' }}>Be the first to review this product after purchasing.</p>
+                    </div>
+                )}
             </div>
         </div>
     );
