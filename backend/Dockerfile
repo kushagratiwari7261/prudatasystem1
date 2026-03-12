@@ -4,14 +4,14 @@ FROM node:20-alpine
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy package descriptors first to leverage Docker layer caching
-COPY package.json package-lock.json* ./
+# Copy package descriptors from backend folder first to leverage Docker layer caching
+COPY backend/package.json backend/package-lock.json* ./
 
 # Install only production dependencies cleanly
 RUN npm ci --only=production
 
-# Copy all remaining source files into the image
-COPY . .
+# Copy all remaining backend source files into the image
+COPY backend/ .
 
 # Expose the API port
 EXPOSE 5000
