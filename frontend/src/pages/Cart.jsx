@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 // Image helper function
 const getFullImageUrl = (imagePath) => {
@@ -14,11 +14,11 @@ const getFullImageUrl = (imagePath) => {
 
     // If it's a relative path starting with /uploads
     if (imagePath.startsWith('/uploads')) {
-        return `http://10.184.34.191:5000${imagePath}`;
+        return `http://localhost:5000${imagePath}`;
     }
 
     // If it's just a filename
-    return `http://10.184.34.191:5000/uploads/products/${imagePath}`;
+    return `http://localhost:5000/uploads/products/${imagePath}`;
 };
 
 const Cart = () => {

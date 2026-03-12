@@ -9,7 +9,7 @@ const Sidebar = () => {
     const handleLogout = () => {
         const token = localStorage.getItem('adminToken');
         // Call logout API (fire and forget)
-        fetch('http://10.184.34.191:5000/api/v1/adminConfig/logout', {
+        fetch('http://localhost:5000/api/v1/adminConfig/logout', {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${token}` }
         }).catch(() => { });

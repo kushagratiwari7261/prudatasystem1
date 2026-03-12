@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import './Dashboard.module.css';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const Dashboard = () => {
     const [stats, setStats] = useState({ total: 0, pending: 0, revenue: 0, customers: 0 });
@@ -15,22 +15,23 @@ const Dashboard = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const [allRes, pendingRes, recentRes] = await Promise.all([
-                    fetch(`${API}/orders/admin/all?limit=1`, { headers }),
-                    fetch(`${API}/orders/admin/all?status=pending&limit=1`, { headers }),
+                const [statsRes, recentRes] = await Promise.all([
+                    fetch(`${API}/orders/admin/stats`, { headers }),
                     fetch(`${API}/orders/admin/all?limit=5`, { headers })
                 ]);
 
-                const allData = await allRes.json();
-                const pendingData = await pendingRes.json();
+                const statsData = await statsRes.json();
                 const recentData = await recentRes.json();
 
-                setStats({
-                    total: allData.data?.pagination?.total || 0,
-                    pending: pendingData.data?.pagination?.total || 0,
-                    revenue: 0,
-                    customers: 0
-                });
+                if (statsData.success) {
+                    const sb = statsData.data.stats;
+                    setStats({
+                        total: sb.total_orders || 0,
+                        pending: sb.pending_orders || 0,
+                        revenue: sb.revenue || 0,
+                        customers: sb.total_customers || 0
+                    });
+                }
 
                 setRecentOrders(recentData.data?.orders || []);
             } catch (err) {
@@ -65,7 +66,7 @@ const Dashboard = () => {
                     {[
                         { label: 'Total Orders', value: stats.total, color: '#3b82f6', bg: '#eff6ff' },
                         { label: 'Pending Orders', value: stats.pending, color: '#f59e0b', bg: '#fffbeb' },
-                        { label: "Today's Revenue", value: `₹${stats.revenue}`, color: '#22c55e', bg: '#f0fdf4' },
+                        { label: 'Revenue', value: `₹${stats.revenue}`, color: '#22c55e', bg: '#f0fdf4' },
                         { label: 'Total Customers', value: stats.customers, color: '#8b5cf6', bg: '#faf5ff' }
                     ].map(card => (
                         <div key={card.label} style={{

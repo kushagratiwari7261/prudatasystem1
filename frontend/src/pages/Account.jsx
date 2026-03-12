@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const Account = () => {
     const navigate = useNavigate();
@@ -15,6 +15,7 @@ const Account = () => {
     const [loading, setLoading] = useState(false);
     const [toast, setToast] = useState('');
     const [showAddForm, setShowAddForm] = useState(false);
+    const [cityOptions, setCityOptions] = useState([]);
     const [newAddress, setNewAddress] = useState({
         full_name: '', phone: '', line1: '', line2: '',
         landmark: '', city: '', state: '', pincode: '',
@@ -37,7 +38,16 @@ const Account = () => {
         if (activeTab === 'addresses') {
             setLoading(true);
             fetch(`${API}/addresses`, { headers: { 'Authorization': `Bearer ${token}` } })
-                .then(r => r.json())
+                .then(r => {
+                    if (r.status === 401) {
+                        localStorage.removeItem('accessToken');
+                        localStorage.removeItem('refreshToken');
+                        localStorage.removeItem('user');
+                        window.location.href = '/login';
+                        return { data: [] }; // Prevent crash in next .then
+                    }
+                    return r.json();
+                })
                 .then(d => { 
                     // Safely extract the addresses array whether it's nested or direct
                     let addrArray = d.data?.addresses || d.data || [];
@@ -152,6 +162,78 @@ const Account = () => {
         const { name, value } = e.target;
         setNewAddress(prev => ({ ...prev, [name]: value }));
     };
+
+    const handleUseCurrentLocation = () => {
+        if (!navigator.geolocation) {
+            showToastMsg('Geolocation is not supported by your browser', true);
+            return;
+        }
+
+        showToastMsg('Fetching your location...');
+        
+        navigator.geolocation.getCurrentPosition(async (position) => {
+            try {
+                const { latitude, longitude } = position.coords;
+                const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                const data = await response.json();
+                
+                if (data && data.address) {
+                    const { road, suburb, neighbourhood, county, state_district, city_district, city, town, state, postcode } = data.address;
+                    
+                    const extractedCity = city || town || city_district || state_district || county || '';
+                    if (extractedCity) setCityOptions([extractedCity]);
+
+                    setNewAddress(prev => ({
+                        ...prev,
+                        line1: road || neighbourhood || suburb || '',
+                        line2: suburb || city_district || '',
+                        city: extractedCity,
+                        state: state || '',
+                        pincode: postcode || prev.pincode
+                    }));
+                    showToastMsg('Location fetched successfully!');
+                }
+            } catch (error) {
+                console.error("Geocoding error:", error);
+                showToastMsg('Failed to fetch address from location', true);
+            }
+        }, (error) => {
+            console.error("Geolocation error:", error);
+            showToastMsg('Failed to get your location. Please check browser permissions.', true);
+        });
+    };
+
+    // Auto-fill city/state based on pincode API
+    useEffect(() => {
+        const fetchPincodeDetails = async () => {
+            if (newAddress.pincode && newAddress.pincode.length === 6) {
+                try {
+                    const res = await fetch(`https://api.postalpincode.in/pincode/${newAddress.pincode}`);
+                    const data = await res.json();
+                    
+                    if (data && data[0] && data[0].Status === 'Success' && data[0].PostOffice && data[0].PostOffice.length > 0) {
+                        const postOffices = data[0].PostOffice;
+                        const options = Array.from(new Set(postOffices.map(po => po.District || po.Block)));
+                        
+                        setCityOptions(options);
+
+                        setNewAddress(prev => ({
+                            ...prev,
+                            city: options.includes(prev.city) ? prev.city : (options[0] || postOffices[0].District), 
+                            state: prev.state || postOffices[0].State
+                        }));
+                    } else {
+                        setCityOptions([]);
+                    }
+                } catch (error) {
+                    console.error('Pincode fetch error:', error);
+                }
+            }
+        };
+
+        const timeoutId = setTimeout(fetchPincodeDetails, 500); // Debounce typing
+        return () => clearTimeout(timeoutId);
+    }, [newAddress.pincode]);
 
     const deleteAddress = async (id) => {
         if (!window.confirm('Delete this address?')) return;
@@ -357,6 +439,14 @@ const Account = () => {
                                     ) : (
                                         <form onSubmit={handleAddAddress} style={{ marginTop: '16px', padding: '20px', border: '1px solid #eaeaec', borderRadius: '8px' }}>
                                             <h4 style={{ marginBottom: '16px', fontSize: '16px', fontWeight: 'bold' }}>Add New Address</h4>
+                                            <button
+                                                type="button"
+                                                className="btn-secondary"
+                                                style={{ marginBottom: '16px', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                                                onClick={handleUseCurrentLocation}
+                                            >
+                                                📍 Use Current Location
+                                            </button>
                                             <div className="form-row">
                                                 <div className="form-group">
                                                     <label className="form-label">Full Name</label>
@@ -364,7 +454,7 @@ const Account = () => {
                                                         className="form-input"
                                                         name="full_name"
                                                         required
-                                                        value={newAddress.full_name}
+                                                        value={newAddress.full_name || JSON.parse(localStorage.getItem('user') || '{}').name || ''}
                                                         onChange={handleInputChange}
                                                     />
                                                 </div>
@@ -394,7 +484,7 @@ const Account = () => {
                                             </div>
 
                                             <div className="form-group">
-                                                <label className="form-label">Address Line 2 (Optional)</label>
+                                                <label className="form-label">Area/Locality (Optional)</label>
                                                 <input
                                                     className="form-input"
                                                     name="line2"
@@ -416,23 +506,49 @@ const Account = () => {
                                             <div className="form-row">
                                                 <div className="form-group">
                                                     <label className="form-label">City</label>
-                                                    <input
-                                                        className="form-input"
-                                                        name="city"
-                                                        required
-                                                        value={newAddress.city}
-                                                        onChange={handleInputChange}
-                                                    />
+                                                    {cityOptions.length > 0 ? (
+                                                        <select
+                                                            className="form-input"
+                                                            name="city"
+                                                            required
+                                                            value={newAddress.city}
+                                                            onChange={handleInputChange}
+                                                        >
+                                                            {cityOptions.map((opt, i) => (
+                                                                <option key={i} value={opt}>{opt}</option>
+                                                            ))}
+                                                        </select>
+                                                    ) : (
+                                                        <input
+                                                            className="form-input"
+                                                            name="city"
+                                                            required
+                                                            value={newAddress.city}
+                                                            onChange={handleInputChange}
+                                                            placeholder="Enter Pincode to auto-fill"
+                                                        />
+                                                    )}
                                                 </div>
                                                 <div className="form-group">
                                                     <label className="form-label">State</label>
-                                                    <input
+                                                    <select
                                                         className="form-input"
                                                         name="state"
                                                         required
                                                         value={newAddress.state}
                                                         onChange={handleInputChange}
-                                                    />
+                                                    >
+                                                        <option value="" disabled>Select State</option>
+                                                        {[
+                                                            "Andaman and Nicobar Islands", "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", 
+                                                            "Chandigarh", "Chhattisgarh", "Dadra and Nagar Haveli and Daman and Diu", "Delhi", 
+                                                            "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jammu and Kashmir", "Jharkhand", 
+                                                            "Karnataka", "Kerala", "Ladakh", "Lakshadweep", "Madhya Pradesh", "Maharashtra", 
+                                                            "Manipur", "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Puducherry", "Punjab", 
+                                                            "Rajasthan", "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh", 
+                                                            "Uttarakhand", "West Bengal"
+                                                        ].map(s => <option key={s} value={s}>{s}</option>)}
+                                                    </select>
                                                 </div>
                                             </div>
 

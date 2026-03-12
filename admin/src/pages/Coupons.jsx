@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Sidebar from '../components/Sidebar';
 import '../pages/Dashboard.module.css';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const Coupons = () => {
     const [coupons, setCoupons] = useState([]);
@@ -287,7 +287,7 @@ const Coupons = () => {
                                                 {coupon.is_first_purchase_only && <span style={{ background: '#fdf4ff', color: '#c026d3', padding: '2px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold', width: 'fit-content' }}>FIRST ORDER</span>}
                                                 {coupon.product_title && (
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: '#f1f5f9', padding: '4px 8px', borderRadius: '4px', width: 'fit-content' }}>
-                                                        {coupon.product_image && <img src={`http://10.184.34.191:5000${coupon.product_image}`} alt={coupon.product_title} style={{ width: '16px', height: '16px', objectFit: 'cover', borderRadius: '2px' }} />}
+                                                        {coupon.product_image && <img src={`http://localhost:5000${coupon.product_image}`} alt={coupon.product_title} style={{ width: '16px', height: '16px', objectFit: 'cover', borderRadius: '2px' }} />}
                                                         <span style={{ fontSize: '11px', fontWeight: 600, color: '#475569' }}>{coupon.product_title}</span>
                                                     </div>
                                                 )}

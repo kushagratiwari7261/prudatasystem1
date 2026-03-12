@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const categories = [
     { name: 'Men', icon: '👔', slug: 'men', image: '/images/categories/men.png' },
@@ -305,9 +305,9 @@ const ProductCard = ({ product }) => {
     if (images.length > 0) {
         const img = images[0];
         if (typeof img === 'string') {
-            imgUrl = img.startsWith('/uploads') ? `http://10.184.34.191:5000${img}` : img;
+            imgUrl = img.startsWith('/uploads') ? `http://localhost:5000${img}` : img;
         } else if (img?.url) {
-            imgUrl = img.url.startsWith('/') ? `http://10.184.34.191:5000${img.url}` : img.url;
+            imgUrl = img.url.startsWith('/') ? `http://localhost:5000${img.url}` : img.url;
         }
     }
 

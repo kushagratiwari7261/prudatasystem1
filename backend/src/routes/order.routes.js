@@ -4,6 +4,7 @@ const { protect, restrictTo } = require('../middleware/auth');
 const orderController = require('../controllers/order.controller');
 
 router.get('/', protect, orderController.getMyOrders);
+router.get('/admin/stats', protect, restrictTo('admin'), orderController.getAdminStats);
 router.get('/admin/all', protect, restrictTo('admin'), orderController.getAllOrders);
 router.get('/:id', protect, orderController.getOrderById);
 router.post('/:id/cancel', protect, orderController.cancelOrder);

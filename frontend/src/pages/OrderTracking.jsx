@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 // Image helper function
 const getFullImageUrl = (imagePath) => {
     if (!imagePath) return '/placeholder-image.png';
     if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('/uploads')) return `http://10.184.34.191:5000${imagePath}`;
-    return `http://10.184.34.191:5000/uploads/products/${imagePath}`;
+    if (imagePath.startsWith('/uploads')) return `http://localhost:5000${imagePath}`;
+    return `http://localhost:5000/uploads/products/${imagePath}`;
 };
 
 const statusOrder = ['pending', 'confirmed', 'processing', 'shipped', 'out_for_delivery', 'delivered'];

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const statusStyles = {
     delivered: 'delivered',
@@ -17,8 +17,8 @@ const statusStyles = {
 const getFullImageUrl = (imagePath) => {
     if (!imagePath) return '/placeholder-image.png';
     if (imagePath.startsWith('http')) return imagePath;
-    if (imagePath.startsWith('/uploads')) return `http://10.184.34.191:5000${imagePath}`;
-    return `http://10.184.34.191:5000/uploads/products/${imagePath}`;
+    if (imagePath.startsWith('/uploads')) return `http://localhost:5000${imagePath}`;
+    return `http://localhost:5000/uploads/products/${imagePath}`;
 };
 
 const Orders = () => {
@@ -31,7 +31,16 @@ const Orders = () => {
         fetch(`${API}/orders`, {
             headers: { 'Authorization': `Bearer ${token}` }
         })
-            .then(r => r.json())
+            .then(r => {
+                if (r.status === 401) {
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
+                    localStorage.removeItem('user');
+                    window.location.href = '/login';
+                    return { data: [] };
+                }
+                return r.json();
+            })
             .then(d => {
                 setOrders(d.data?.orders || d.data || []);
                 setLoading(false);

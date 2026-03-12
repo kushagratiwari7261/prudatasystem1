@@ -294,6 +294,24 @@ const getAllOrders = async (req, res, next) => {
     }
 };
 
+const getAdminStats = async (req, res, next) => {
+    try {
+        const statsResult = await db.query(`
+            SELECT 
+                (SELECT COUNT(*) FROM orders) as total_orders,
+                (SELECT COUNT(*) FROM orders WHERE status = 'pending') as pending_orders,
+                (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE payment_status = 'paid') as revenue,
+                (SELECT COUNT(*) FROM users WHERE role = 'user') as total_customers
+        `);
+
+        sendSuccess(res, {
+            stats: statsResult.rows[0] || { total_orders: 0, pending_orders: 0, revenue: 0, total_customers: 0 }
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 /**
  * Delete order (Admin only)
  * @route DELETE /api/v1/orders/:id
@@ -455,6 +473,7 @@ module.exports = {
     cancelOrder,
     updateOrderStatus,
     getAllOrders,
+    getAdminStats,
     deleteOrder,
     setIO
 };

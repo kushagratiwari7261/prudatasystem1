@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Sidebar from '../components/Sidebar';
 
-const API = 'http://10.184.34.191:5000/api/v1';
+const API = 'http://localhost:5000/api/v1';
 
 const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL', '2XL', '3XL'];
 const COLORS = [
@@ -26,10 +26,10 @@ const getFullImageUrl = (imagePath) => {
     }
 
     if (imagePath.startsWith('/uploads')) {
-        return `http://10.184.34.191:5000${imagePath}`;
+        return `http://localhost:5000${imagePath}`;
     }
 
-    return `http://10.184.34.191:5000/uploads/products/${imagePath}`;
+    return `http://localhost:5000/uploads/products/${imagePath}`;
 };
 
 const Products = () => {

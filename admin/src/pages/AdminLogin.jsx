@@ -21,7 +21,7 @@ const AdminLogin = () => {
         setLoading(true);
 
         try {
-            const res = await fetch('http://10.184.34.191:5000/api/v1/adminConfig/login', {
+            const res = await fetch('http://localhost:5000/api/v1/adminConfig/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })

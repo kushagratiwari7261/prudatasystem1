@@ -18,7 +18,7 @@ const Navbar = () => {
         setCartCount(guestCart.items?.length || 0);
 
         if (token) {
-            fetch('http://10.184.34.191:5000/api/v1/cart', {
+            fetch('http://localhost:5000/api/v1/cart', {
                 headers: { 'Authorization': `Bearer ${token}` }
             })
                 .then(res => res.json())

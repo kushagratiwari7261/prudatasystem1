@@ -30,7 +30,7 @@ const Login = () => {
         const guest = JSON.parse(localStorage.getItem('guestCart') || 'null');
         if (!guest?.items?.length) return false;
         try {
-            await fetch('http://10.184.34.191:5000/api/v1/cart/merge', {
+            await fetch('http://localhost:5000/api/v1/cart/merge', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ const Login = () => {
         setLoading(true);
 
         try {
-            const res = await fetch('http://10.184.34.191:5000/api/v1/auth/login', {
+            const res = await fetch('http://localhost:5000/api/v1/auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
@@ -79,7 +79,7 @@ const Login = () => {
         }
     };
 
-    const googleUrl = `http://10.184.34.191:5000/api/v1/auth/google?state=${encodeURIComponent(redirect)}`;
+    const googleUrl = `http://localhost:5000/api/v1/auth/google?state=${encodeURIComponent(redirect)}`;
 
     return (
         <div className="auth-page">

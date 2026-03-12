@@ -35,7 +35,7 @@ const AuthCallback = () => {
             let finalRedirect = redirect;
             if (guest?.items?.length) {
                 try {
-                    await fetch('http://10.184.34.191:5000/api/v1/cart/merge', {
+                    await fetch('http://localhost:5000/api/v1/cart/merge', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',

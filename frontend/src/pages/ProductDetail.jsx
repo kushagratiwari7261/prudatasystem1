@@ -20,7 +20,7 @@ const ProductDetail = () => {
     // Get the base URL for images from environment or default to backend
     const IMAGE_BASE_URL = process.env.REACT_APP_API_URL
         ? process.env.REACT_APP_API_URL.replace('/api/v1', '')
-        : 'http://10.184.34.191:5000';
+        : 'http://localhost:5000';
 
     useEffect(() => {
         fetchProduct();
