@@ -1,0 +1,45 @@
+# Zenwair Project Status: Phase 1 Foundation Complete
+
+## Context for Claude
+We have successfully completed Phase 1 (Foundation) of the Zenwair e-commerce platform. The project is a monorepo containing a Node.js backend using a pure, framework-free approach for maximum performance and strict adherence to specific database constraints.
+
+## Technical Stack & Constraints Achieved
+- **Node.js Express Backend:** Uses native `require` (CommonJS), modern `async/await`.
+- **Database:** PostgreSQL (raw `pg` pool, absolutely **NO ORM**).
+- **Caching:** Redis (`ioredis` client) for session, OTPs, and BullMQ.
+- **Search:** Elasticsearch (`@elastic/elasticsearch`) for autocomplete and robust text search.
+- **Database Constraints Enforced:**
+  - All primary keys are `UUID` generated via `uuid-ossp`.
+  - All timestamps use `TIMESTAMPTZ`.
+  - Soft deletes are implemented globally via `is_active BOOLEAN DEFAULT true`.
+  - Parameterized queries are mandatory for all SQL executing scripts.
+- **Infrastructure:** Fully containerized using [docker-compose.yml](file:///d:/Zenwair%20Clothing/docker-compose.yml) orchestrating 5 services: `postgres` (port 5433 to avoid local conflicts), `redis`, `elasticsearch`, `backend` API, and an `nginx` reverse proxy.
+
+## Project Structure Built
+```text
+/zenwair-clothing
+├── .github/workflows/ci-cd.yml      # Automated GitHub Actions deployment pipeline
+├── backend/
+│   ├── .env & .env.local            # Environment hierarchy (Local terminal vs Docker)
+│   ├── Dockerfile                   # Optimized Node 20 Alpine production image
+│   ├── package.json                 # Core dependencies (cors, helmet, pg, ioredis, etc)
+│   ├── server.js                    # Express entry point with fully tested DB/Redis/ES health checks
+│   └── src/config/
+│       ├── db.js                    # Raw PostgreSQL connection pool
+│       ├── redis.js                 # Redis client setup
+│       ├── elasticsearch.js         # ES connection and `products` index definition
+│       ├── env.js                   # Graceful environment variable loader
+│       ├── schema.sql               # 18-Table comprehensive DB Schema (Products, Users, Orders, etc)
+│       ├── migrate.js               # Script to execute schema.sql into DB
+│       └── seed.js                  # Script to inject mock data for development
+├── frontend/                        # Temporary React/Node test client
+└── infra/nginx.conf                 # Nginx reverse proxy routing `/api/*` and websockets
+```
+
+## What Can Be Achieved From This Now
+1. **Develop Phase 2 (Authentication):** The database schema for users, sessions, and OTPs is fully built and ready to be queried. Redis is online for token blacklisting and rate limiting.
+2. **Develop Product APIs:** The 18 table schema includes robust E-commerce structures (products, variants, categories, inventory, orders, payments). The API can directly execute SQL against these.
+3. **Continuous Deployment:** Submitting a PR to `main` will automatically trigger the CI/CD pipeline which tests the database connections, builds the Docker image to GHCR, and deploys it to a VPS.
+4. **Local Development:** The backend can be run in two ways smoothly:
+   - `docker compose up -d` (Entire stack)
+   - `npm run dev` in the backend folder alongside Docker databases (for native VSCode debugging).

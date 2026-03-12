@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Environment variables (NEVER COMMIT THESE)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.pem
+
+# Build directories
+frontend/build/
+admin/build/
+dist/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Docker Data & Volumes
+postgres_data/
+redis_data/
+es_data/
+
+# Backend Uploads
+backend/uploads/
+backend/public/uploads/
+
+# IDE and Editor folders
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Testing/Coverage
+coverage/
+
+# Log files
+logs/
+*.log
+
+# Scripts
+replace-urls.js
