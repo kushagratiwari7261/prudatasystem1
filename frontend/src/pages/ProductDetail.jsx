@@ -21,6 +21,9 @@ const ProductDetail = () => {
     const [reviews, setReviews] = useState([]);
     const [reviewsLoading, setReviewsLoading] = useState(false);
     const [reviewStats, setReviewStats] = useState({ avg: 0, count: 0 });
+    const [reviewModalOpen, setReviewModalOpen] = useState(false);
+    const [reviewData, setReviewData] = useState({ rating: 5, comment: '' });
+    const [submittingReview, setSubmittingReview] = useState(false);
 
     // Get the base URL for images from environment or default to backend
     const IMAGE_BASE_URL = process.env.REACT_APP_API_URL
@@ -95,6 +98,45 @@ const ProductDetail = () => {
             setReviewsLoading(false);
         }
     };
+
+    const handleSubmitReview = async (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+            alert('Please login to leave a review.');
+            return;
+        }
+        if (!reviewData.rating) return alert('Please provide a star rating.');
+        
+        setSubmittingReview(true);
+        try {
+            const response = await API.post('/reviews', {
+                product_id: product.id,
+                rating: reviewData.rating,
+                comment: reviewData.comment
+            });
+            if (response.data.success) {
+                toast.success('Thank you for your review!');
+                setReviewModalOpen(false);
+                fetchReviews(product.id);
+            }
+        } catch (error) {
+            const errorMsg = error.response?.data?.message || 'Failed to submit review. (Note: You must have purchased and received this item)';
+            toast.error(errorMsg);
+            console.error(error);
+        } finally {
+            setSubmittingReview(false);
+        }
+    };
+
+    const calculateStarDistribution = () => {
+        const dist = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+        reviews.forEach(r => {
+            if (dist[r.rating] !== undefined) dist[r.rating]++;
+        });
+        return dist;
+    };
+    const starDist = calculateStarDistribution();
 
     // Update selected variant when size/color changes
     useEffect(() => {
@@ -474,45 +516,80 @@ const ProductDetail = () => {
             </div>
 
             {/* Customer Reviews Section */}
-            <div style={{ gridColumn: '1 / -1', marginTop: '40px', borderTop: '1px solid #eaeaec', paddingTop: '32px' }}>
-                <h2 style={{ fontSize: '24px', fontWeight: 800, marginBottom: '24px' }}>Customer Reviews</h2>
+            <div className="product-reviews-section">
+                <h2 className="reviews-heading">Customer Reviews</h2>
                 
                 {reviewStats.count > 0 ? (
-                    <div style={{ display: 'flex', gap: '40px' }}>
-                        <div style={{ minWidth: '200px' }}>
-                            <div style={{ fontSize: '48px', fontWeight: 300 }}>{reviewStats.avg} <span style={{ fontSize: '24px', color: '#ff9900' }}>★</span></div>
-                            <p style={{ color: '#535766' }}>Based on {reviewStats.count} verified ratings</p>
+                    <div className="reviews-layout">
+                        {/* Left Summary Pane */}
+                        <div className="reviews-summary-pane">
+                            <div className="average-rating-block">
+                                <div className="avg-rating-value">
+                                    {Number(reviewStats.avg).toFixed(1)} <span className="avg-star">★</span>
+                                </div>
+                                <div className="avg-rating-text">
+                                    {reviewStats.count} Verified Ratings
+                                </div>
+                            </div>
+                            
+                            <div className="rating-distribution">
+                                {[5, 4, 3, 2, 1].map(star => {
+                                    const count = starDist[star];
+                                    const percentage = reviewStats.count > 0 ? (count / reviewStats.count) * 100 : 0;
+                                    return (
+                                        <div key={star} className="rating-bar-row">
+                                            <span className="star-label">{star} ★</span>
+                                            <div className="progress-bar-bg">
+                                                <div 
+                                                    className="progress-bar-fill" 
+                                                    style={{ 
+                                                        width: `${percentage}%`,
+                                                        backgroundColor: star >= 4 ? '#14958f' : star === 3 ? '#ff9f00' : '#ff6161'
+                                                    }}
+                                                />
+                                            </div>
+                                            <span className="count-label">{count}</span>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+                            <button onClick={() => setReviewModalOpen(true)} className="write-review-btn-large">
+                                Write a Product Review
+                            </button>
                         </div>
                         
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        {/* Right Reviews List Pane */}
+                        <div className="reviews-list-pane">
                             {reviewsLoading ? (
                                 <div className="spinner"></div>
                             ) : (
                                 reviews.map(review => (
-                                    <div key={review.id} style={{ borderBottom: '1px solid #f1f2f4', paddingBottom: '16px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                                            <div style={{ 
-                                                background: review.rating >= 4 ? '#03a685' : review.rating === 3 ? '#ff9f00' : '#ff6161', 
-                                                color: 'white', padding: '2px 6px', borderRadius: '3px', fontSize: '12px', fontWeight: 700 
-                                            }}>
+                                    <div key={review.id} className="review-card">
+                                        <div className="review-header">
+                                            <div className={`review-badge ${review.rating >= 4 ? 'good' : review.rating === 3 ? 'avg' : 'poor'}`}>
                                                 {review.rating} ★
                                             </div>
-                                            <span style={{ fontWeight: 600, fontSize: '14px' }}>{review.comment ? 'Review' : 'Rating'}</span>
+                                            <span className="review-title">
+                                                {review.rating >= 4 ? 'Excellent' : review.rating === 3 ? 'Good' : 'Needs Improvement'}
+                                            </span>
                                         </div>
                                         {review.comment && (
-                                            <p style={{ fontSize: '14px', color: '#282c3f', lineHeight: 1.5, marginBottom: '8px' }}>
+                                            <p className="review-comment">
                                                 {review.comment}
                                             </p>
                                         )}
-                                        <div style={{ fontSize: '12px', color: '#7e818c', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span>{review.user_name}</span>
-                                            <span style={{ color: '#d4d5d9' }}>|</span>
-                                            <span>{new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}</span>
-                                            <span style={{ color: '#d4d5d9' }}>|</span>
-                                            <span style={{ color: '#03a685', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                                                Verified Buyer
-                                            </span>
+                                        <div className="review-footer">
+                                            <div className="reviewer-info">
+                                                <span className="reviewer-name">{review.user_name}</span>
+                                                <span className="review-divider">|</span>
+                                                <span className="review-date">
+                                                    {new Date(review.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                                                </span>
+                                            </div>
+                                            <div className="verified-badge">
+                                                ✓ Verified Buyer
+                                            </div>
                                         </div>
                                     </div>
                                 ))
@@ -526,6 +603,49 @@ const ProductDetail = () => {
                     </div>
                 )}
             </div>
+
+            {/* Review Modal */}
+            {reviewModalOpen && (
+                <div className="modal-overlay">
+                    <div className="modal-content" style={{ maxWidth: '500px' }}>
+                        <div className="modal-header">
+                            <h2>Write a Review</h2>
+                            <button className="modal-close" onClick={() => setReviewModalOpen(false)}>✕</button>
+                        </div>
+                        <div className="modal-body">
+                            <form onSubmit={handleSubmitReview}>
+                                <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                    {[1, 2, 3, 4, 5].map((star) => (
+                                        <button
+                                            key={star}
+                                            type="button"
+                                            onClick={() => setReviewData({ ...reviewData, rating: star })}
+                                            style={{
+                                                background: 'none', border: 'none', fontSize: '32px', cursor: 'pointer',
+                                                color: star <= reviewData.rating ? '#ff9f00' : '#eaeaec'
+                                            }}
+                                        >
+                                            ★
+                                        </button>
+                                    ))}
+                                </div>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{ display: 'block', marginBottom: '8px', fontWeight: 600, fontSize: '14px' }}>Your Feedback</label>
+                                    <textarea
+                                        value={reviewData.comment}
+                                        onChange={(e) => setReviewData({ ...reviewData, comment: e.target.value })}
+                                        placeholder="What did you like or dislike? How's the fit and fabric?"
+                                        style={{ width: '100%', padding: '12px', boxSizing: 'border-box', border: '1px solid #d4d5d9', borderRadius: '4px', minHeight: '100px', resize: 'vertical' }}
+                                    />
+                                </div>
+                                <button type="submit" className="btn-primary" style={{ width: '100%' }} disabled={submittingReview}>
+                                    {submittingReview ? 'Submitting...' : 'Submit Review'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
