@@ -120,16 +120,16 @@ const Products = () => {
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar />
-            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: '#f1f5f9' }}>
+            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: 'var(--bg-main)' }}>
                 {/* Notification */}
                 {notification && (
                     <div style={{
                         position: 'fixed', top: 20, right: 20, zIndex: 9999,
                         padding: '14px 24px', borderRadius: '10px',
-                        background: notification.type === 'error' ? '#fee2e2' : '#dcfce7',
-                        color: notification.type === 'error' ? '#dc2626' : '#16a34a',
+                        background: notification.type === 'error' ? 'rgba(239, 68, 68, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                        color: notification.type === 'error' ? 'var(--accent-red)' : 'var(--accent-green)',
                         fontWeight: 600, fontSize: '14px',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                        boxShadow: 'var(--shadow-md)',
                         animation: 'fadeIn 0.3s ease'
                     }}>
                         {notification.message}
@@ -138,11 +138,11 @@ const Products = () => {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '4px' }}>Products</h1>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>Manage your product catalog</p>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '4px' }}>Products</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Manage your product catalog</p>
                     </div>
                     <button onClick={() => { setEditingProduct(null); setShowModal(true); }} style={{
-                        padding: '12px 24px', background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
+                        padding: '12px 24px', background: 'var(--accent-blue)',
                         color: 'white', border: 'none', borderRadius: '10px', fontSize: '14px',
                         fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px',
                         boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
@@ -153,15 +153,15 @@ const Products = () => {
 
                 {/* Product Cards Grid */}
                 {loading ? (
-                    <div style={{ textAlign: 'center', padding: '60px 0', color: '#94a3b8' }}>Loading...</div>
+                    <div style={{ textAlign: 'center', padding: '60px 0', color: 'var(--text-muted)' }}>Loading...</div>
                 ) : products.length === 0 ? (
                     <div style={{
                         textAlign: 'center', padding: '80px 40px',
-                        background: 'white', borderRadius: '16px', border: '1px solid #e2e8f0'
+                        background: 'var(--bg-card)', borderRadius: '16px', border: '1px solid var(--border-color)'
                     }}>
                         <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
-                        <h3 style={{ color: '#0f172a', fontWeight: 700, marginBottom: '8px' }}>No products yet</h3>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>Add your first product to get started</p>
+                        <h3 style={{ color: 'var(--text-primary)', fontWeight: 700, marginBottom: '8px' }}>No products yet</h3>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Add your first product to get started</p>
                     </div>
                 ) : (
                     <div style={{
@@ -229,7 +229,7 @@ const Products = () => {
 };
 
 /* ===================== PRODUCT CARD ===================== */
-const ProductCard = ({ product, onEdit, onDelete, onVariants }) => {
+const ProductCard = ({ product, onEdit, onDelete, onVariants, onReviews }) => {
     const images = product.images || [];
     let imgUrl = '/placeholder-image.png';
     if (images.length > 0) {
@@ -243,11 +243,11 @@ const ProductCard = ({ product, onEdit, onDelete, onVariants }) => {
 
     return (
         <div style={{
-            background: 'white', borderRadius: '14px', overflow: 'hidden',
-            border: '1px solid #e2e8f0', transition: 'all 0.2s',
-            boxShadow: '0 1px 3px rgba(0,0,0,0.06)'
+            background: 'var(--bg-card)', borderRadius: '14px', overflow: 'hidden',
+            border: '1px solid var(--border-color)', transition: 'all 0.2s',
+            boxShadow: 'var(--shadow-sm)'
         }}>
-            <div style={{ position: 'relative', height: '200px', background: '#f8fafc', overflow: 'hidden' }}>
+            <div style={{ position: 'relative', height: '200px', background: 'var(--bg-hover)', overflow: 'hidden' }}>
                 <img src={imgUrl} alt={product.title} style={{
                     width: '100%', height: '100%', objectFit: 'cover'
                 }} />
@@ -271,18 +271,18 @@ const ProductCard = ({ product, onEdit, onDelete, onVariants }) => {
                 </div>
             </div>
             <div style={{ padding: '16px' }}>
-                <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                <div style={{ fontSize: '11px', color: 'var(--accent-blue)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
                     {product.category_name || 'Uncategorized'} • {product.brand_name || 'No Brand'}
                 </div>
-                <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '8px' }}>{product.title}</h3>
+                <h3 style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '8px' }}>{product.title}</h3>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '18px', fontWeight: 800, color: '#0f172a' }}>
+                    <span style={{ fontSize: '18px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         ₹{product.discount_price || product.base_price}
                     </span>
                     {product.discount_price && product.base_price > product.discount_price && (
                         <>
-                            <span style={{ fontSize: '13px', color: '#94a3b8', textDecoration: 'line-through' }}>₹{product.base_price}</span>
-                            <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 700 }}>
+                            <span style={{ fontSize: '13px', color: 'var(--text-muted)', textDecoration: 'line-through' }}>₹{product.base_price}</span>
+                            <span style={{ fontSize: '12px', color: 'var(--accent-green)', fontWeight: 700 }}>
                                 {Math.round(((product.base_price - product.discount_price) / product.base_price) * 100)}% OFF
                             </span>
                         </>
@@ -290,20 +290,20 @@ const ProductCard = ({ product, onEdit, onDelete, onVariants }) => {
                 </div>
                 <div style={{ display: 'flex', gap: '8px' }}>
                     <button onClick={onVariants} style={{
-                        flex: 1, padding: '8px', background: '#f1f5f9', border: '1px solid #e2e8f0',
-                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#3b82f6'
-                    }}>📐 Sizes</button>
+                        flex: 1, padding: '8px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-primary)'
+                    }}>📐</button>
                     <button onClick={onReviews} style={{
-                        flex: 1, padding: '8px', background: '#fef3c7', border: '1px solid #fde68a',
+                        flex: 1, padding: '8px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.2)',
                         borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#d97706'
-                    }}>⭐ Reviews</button>
+                    }}>⭐</button>
                     <button onClick={onEdit} style={{
-                        flex: 1, padding: '8px', background: '#eff6ff', border: '1px solid #bfdbfe',
-                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#2563eb'
-                    }}>✏️ Edit</button>
+                        flex: 1, padding: '8px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)',
+                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--accent-blue)'
+                    }}>✏️</button>
                     <button onClick={onDelete} style={{
-                        padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca',
-                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: '#dc2626'
+                        padding: '8px 12px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                        borderRadius: '8px', fontSize: '12px', fontWeight: 600, cursor: 'pointer', color: 'var(--accent-red)'
                     }}>🗑️</button>
                 </div>
             </div>
@@ -468,13 +468,14 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
     };
 
     const inputStyle = {
-        width: '100%', padding: '10px 14px', border: '1px solid #e2e8f0',
+        width: '100%', padding: '10px 14px', border: '1px solid var(--border-color)',
         borderRadius: '8px', fontSize: '14px', outline: 'none',
+        background: 'var(--input-bg)', color: 'var(--text-primary)',
         transition: 'border-color 0.2s'
     };
 
     const labelStyle = {
-        fontSize: '13px', fontWeight: 600, color: '#374151', marginBottom: '4px', display: 'block'
+        fontSize: '13px', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px', display: 'block'
     };
 
     return (
@@ -484,19 +485,19 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
             padding: '40px 20px', zIndex: 1000, overflowY: 'auto'
         }}>
             <div style={{
-                background: 'white', borderRadius: '16px', width: '100%', maxWidth: '680px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                background: 'var(--bg-card)', borderRadius: '16px', width: '100%', maxWidth: '680px',
+                boxShadow: 'var(--shadow-lg)'
             }}>
                 <div style={{
-                    padding: '24px 28px', borderBottom: '1px solid #e2e8f0',
+                    padding: '24px 28px', borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
-                    <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>
                         {product ? 'Edit Product' : 'Add New Product'}
                     </h2>
                     <button onClick={onClose} style={{
                         width: '36px', height: '36px', borderRadius: '10px',
-                        background: '#f1f5f9', border: 'none', fontSize: '18px', cursor: 'pointer'
+                        background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none', fontSize: '18px', cursor: 'pointer'
                     }}>✕</button>
                 </div>
 
@@ -567,8 +568,8 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
                         <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
                             <input type="checkbox" checked={form.is_featured}
                                 onChange={(e) => handleChange('is_featured', e.target.checked)}
-                                style={{ width: '18px', height: '18px', accentColor: '#3b82f6' }} />
-                            <span style={{ fontSize: '14px', fontWeight: 600, color: '#374151' }}>⭐ Featured Product</span>
+                                style={{ width: '18px', height: '18px', accentColor: 'var(--accent-blue)' }} />
+                            <span style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text-secondary)' }}>⭐ Featured Product</span>
                         </label>
                     </div>
 
@@ -576,16 +577,16 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
                     <div style={{ marginBottom: '24px' }}>
                         <label style={labelStyle}>Product Images</label>
                         <div style={{
-                            border: '2px dashed #d1d5db', borderRadius: '12px', padding: '24px',
-                            textAlign: 'center', background: '#fafbfc', cursor: 'pointer', position: 'relative'
+                            border: '2px dashed var(--border-color)', borderRadius: '12px', padding: '24px',
+                            textAlign: 'center', background: 'var(--bg-hover)', cursor: 'pointer', position: 'relative'
                         }}>
                             <input type="file" multiple accept="image/*" onChange={handleImageUpload}
                                 style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                             <div style={{ fontSize: '32px', marginBottom: '8px' }}>📸</div>
-                            <p style={{ fontSize: '14px', color: '#6b7280', fontWeight: 500 }}>
+                            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>
                                 {uploading ? 'Uploading...' : 'Click or drag images here'}
                             </p>
-                            <p style={{ fontSize: '12px', color: '#9ca3af', marginTop: '4px' }}>PNG, JPG up to 5MB each</p>
+                            <p style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>PNG, JPG up to 5MB each</p>
                         </div>
 
                         {/* Image Previews */}
@@ -596,7 +597,7 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
                                         ? getFullImageUrl(img)
                                         : img?.url ? getFullImageUrl(img.url) : '';
                                     return (
-                                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                        <div key={idx} style={{ position: 'relative', width: '80px', height: '80px', borderRadius: '8px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
                                             <img
                                                 src={!imageErrors[idx] ? url : '/placeholder-image.png'}
                                                 alt=""
@@ -618,8 +619,8 @@ const ProductModal = ({ product, categories, brands, token, onClose, onSaved }) 
                     {/* Submit */}
                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                         <button type="button" onClick={onClose} style={{
-                            padding: '12px 24px', background: '#f1f5f9', border: '1px solid #e2e8f0',
-                            borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', color: '#475569'
+                            padding: '12px 24px', background: 'var(--bg-secondary)', border: '1px solid var(--border-color)',
+                            borderRadius: '10px', fontSize: '14px', fontWeight: 600, cursor: 'pointer', color: 'var(--text-secondary)'
                         }}>Cancel</button>
                         <button type="submit" disabled={saving} style={{
                             padding: '12px 32px', background: saving ? '#94a3b8' : 'linear-gradient(135deg, #3b82f6, #2563eb)',
@@ -708,50 +709,50 @@ const VariantModal = ({ product, variants, token, onClose, onRefresh, showNotifi
             padding: '40px 20px', zIndex: 1000, overflowY: 'auto'
         }}>
             <div style={{
-                background: 'white', borderRadius: '16px', width: '100%', maxWidth: '700px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                background: 'var(--bg-card)', borderRadius: '16px', width: '100%', maxWidth: '700px',
+                boxShadow: 'var(--shadow-lg)'
             }}>
                 <div style={{
-                    padding: '24px 28px', borderBottom: '1px solid #e2e8f0',
+                    padding: '24px 28px', borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Sizes & Stock</h2>
-                        <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>{product.title}</p>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>Sizes & Stock</h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '2px' }}>{product.title}</p>
                     </div>
                     <button onClick={onClose} style={{
                         width: '36px', height: '36px', borderRadius: '10px',
-                        background: '#f1f5f9', border: 'none', fontSize: '18px', cursor: 'pointer'
+                        background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none', fontSize: '18px', cursor: 'pointer'
                     }}>✕</button>
                 </div>
 
                 <div style={{ padding: '24px 28px' }}>
                     {/* Add new variant */}
                     <div style={{
-                        background: '#f8fafc', borderRadius: '12px', padding: '20px',
-                        border: '1px solid #e2e8f0', marginBottom: '24px'
+                        background: 'var(--bg-hover)', borderRadius: '12px', padding: '20px',
+                        border: '1px solid var(--border-color)', marginBottom: '24px'
                     }}>
-                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>Add Variant</h3>
+                        <h3 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '12px' }}>Add Variant</h3>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '12px', alignItems: 'end' }}>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Size</label>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Size</label>
                                 <select value={newVariant.size} onChange={(e) => setNewVariant(p => ({ ...p, size: e.target.value }))}
-                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }}>
+                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '13px' }}>
                                     {SIZES.map(s => <option key={s} value={s}>{s}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Color</label>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Color</label>
                                 <select value={newVariant.color} onChange={(e) => setNewVariant(p => ({ ...p, color: e.target.value }))}
-                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }}>
+                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '13px' }}>
                                     {COLORS.map(c => <option key={c.name} value={c.name}>{c.name}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label style={{ fontSize: '12px', fontWeight: 600, color: '#64748b', display: 'block', marginBottom: '4px' }}>Stock Qty</label>
+                                <label style={{ fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', display: 'block', marginBottom: '4px' }}>Stock Qty</label>
                                 <input type="number" value={newVariant.quantity}
                                     onChange={(e) => setNewVariant(p => ({ ...p, quantity: e.target.value }))}
-                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid #e2e8f0', borderRadius: '6px', fontSize: '13px' }} />
+                                    style={{ width: '100%', padding: '8px 10px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', borderRadius: '6px', fontSize: '13px' }} />
                             </div>
                             <button onClick={addVariant} disabled={saving} style={{
                                 padding: '8px 16px', background: '#3b82f6', color: 'white',
@@ -765,7 +766,7 @@ const VariantModal = ({ product, variants, token, onClose, onRefresh, showNotifi
 
                     {/* Existing Variants */}
                     {variants.length === 0 ? (
-                        <p style={{ textAlign: 'center', color: '#94a3b8', padding: '20px', fontSize: '14px' }}>
+                        <p style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '20px', fontSize: '14px' }}>
                             No variants yet. Add sizes and stock above.
                         </p>
                     ) : (
@@ -773,39 +774,39 @@ const VariantModal = ({ product, variants, token, onClose, onRefresh, showNotifi
                             {variants.map(v => (
                                 <div key={v.id} style={{
                                     display: 'flex', alignItems: 'center', gap: '14px',
-                                    padding: '14px 16px', background: '#fafbfc', borderRadius: '10px',
-                                    border: '1px solid #e2e8f0'
+                                    padding: '14px 16px', background: 'var(--bg-hover)', borderRadius: '10px',
+                                    border: '1px solid var(--border-color)'
                                 }}>
                                     {v.color_hex && (
                                         <div style={{
                                             width: '24px', height: '24px', borderRadius: '50%',
-                                            background: v.color_hex, border: '2px solid #e2e8f0'
+                                            background: v.color_hex, border: '2px solid var(--border-color)'
                                         }} />
                                     )}
                                     <div style={{ flex: 1 }}>
-                                        <span style={{ fontWeight: 700, fontSize: '14px', color: '#0f172a' }}>{v.size}</span>
-                                        <span style={{ color: '#64748b', fontSize: '12px', marginLeft: '8px' }}>{v.color}</span>
-                                        <span style={{ color: '#94a3b8', fontSize: '11px', marginLeft: '8px' }}>SKU: {v.sku}</span>
+                                        <span style={{ fontWeight: 700, fontSize: '14px', color: 'var(--text-primary)' }}>{v.size}</span>
+                                        <span style={{ color: 'var(--text-secondary)', fontSize: '12px', marginLeft: '8px' }}>{v.color}</span>
+                                        <span style={{ color: 'var(--text-muted)', fontSize: '11px', marginLeft: '8px' }}>SKU: {v.sku}</span>
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '12px', color: '#64748b' }}>Stock:</span>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Stock:</span>
                                         <input type="number" defaultValue={v.quantity || 0} min={0}
                                             style={{
-                                                width: '70px', padding: '6px 8px', border: '1px solid #e2e8f0',
+                                                width: '70px', padding: '6px 8px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)',
                                                 borderRadius: '6px', fontSize: '13px', textAlign: 'center'
                                             }}
                                             onBlur={(e) => updateStock(v.id, e.target.value)} />
                                     </div>
                                     <span style={{
                                         fontSize: '11px', fontWeight: 600, padding: '3px 8px', borderRadius: '6px',
-                                        background: (v.available || v.quantity || 0) > 10 ? '#dcfce7' : (v.available || v.quantity || 0) > 0 ? '#fef3c7' : '#fee2e2',
-                                        color: (v.available || v.quantity || 0) > 10 ? '#16a34a' : (v.available || v.quantity || 0) > 0 ? '#d97706' : '#dc2626'
+                                        background: (v.available || v.quantity || 0) > 10 ? 'rgba(16, 185, 129, 0.1)' : (v.available || v.quantity || 0) > 0 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                        color: (v.available || v.quantity || 0) > 10 ? 'var(--accent-green)' : (v.available || v.quantity || 0) > 0 ? '#d97706' : 'var(--accent-red)'
                                     }}>
                                         {(v.available || v.quantity || 0) > 0 ? `${v.available || v.quantity} avail` : 'Out of stock'}
                                     </span>
                                     <button onClick={() => deleteVariant(v.id)} style={{
-                                        padding: '6px 10px', background: '#fef2f2', border: '1px solid #fecaca',
-                                        borderRadius: '6px', fontSize: '11px', cursor: 'pointer', color: '#dc2626'
+                                        padding: '6px 10px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                                        borderRadius: '6px', fontSize: '11px', cursor: 'pointer', color: 'var(--accent-red)'
                                     }}>🗑️</button>
                                 </div>
                             ))}
@@ -845,26 +846,26 @@ const ReviewModal = ({ product, reviews, token, onClose, onRefresh, showNotifica
             padding: '40px 20px', zIndex: 1000, overflowY: 'auto'
         }}>
             <div style={{
-                background: 'white', borderRadius: '16px', width: '100%', maxWidth: '600px',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.2)'
+                background: 'var(--bg-card)', borderRadius: '16px', width: '100%', maxWidth: '600px',
+                boxShadow: 'var(--shadow-lg)'
             }}>
                 <div style={{
-                    padding: '24px 28px', borderBottom: '1px solid #e2e8f0',
+                    padding: '24px 28px', borderBottom: '1px solid var(--border-color)',
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                 }}>
                     <div>
-                        <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#0f172a' }}>Customer Reviews</h2>
-                        <p style={{ color: '#64748b', fontSize: '13px', marginTop: '2px' }}>{product.title}</p>
+                        <h2 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)' }}>Customer Reviews</h2>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginTop: '2px' }}>{product.title}</p>
                     </div>
                     <button onClick={onClose} style={{
                         width: '36px', height: '36px', borderRadius: '10px',
-                        background: '#f1f5f9', border: 'none', fontSize: '18px', cursor: 'pointer'
+                        background: 'var(--bg-secondary)', color: 'var(--text-primary)', border: 'none', fontSize: '18px', cursor: 'pointer'
                     }}>✕</button>
                 </div>
 
                 <div style={{ padding: '24px 28px', maxHeight: '60vh', overflowY: 'auto' }}>
                     {reviews.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '40px 0', color: '#94a3b8' }}>
+                        <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
                             <div style={{ fontSize: '40px', marginBottom: '12px' }}>⭐</div>
                             <p>No reviews yet for this product.</p>
                         </div>
@@ -872,26 +873,26 @@ const ReviewModal = ({ product, reviews, token, onClose, onRefresh, showNotifica
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                             {reviews.map(review => (
                                 <div key={review.id} style={{
-                                    border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px',
-                                    background: '#fafbfc', position: 'relative'
+                                    border: '1px solid var(--border-color)', borderRadius: '12px', padding: '16px',
+                                    background: 'var(--bg-hover)', position: 'relative'
                                 }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <div style={{
-                                                background: review.rating >= 4 ? '#16a34a' : review.rating === 3 ? '#fbbf24' : '#dc2626',
+                                                background: review.rating >= 4 ? 'var(--accent-green)' : review.rating === 3 ? '#fbbf24' : 'var(--accent-red)',
                                                 color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 700
                                             }}>
                                                 {review.rating} ★
                                             </div>
-                                            <span style={{ fontWeight: 600, fontSize: '14px', color: '#0f172a' }}>{review.user_name}</span>
+                                            <span style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text-primary)' }}>{review.user_name}</span>
                                         </div>
-                                        <span style={{ fontSize: '12px', color: '#64748b' }}>
+                                        <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
                                             {new Date(review.created_at).toLocaleDateString()}
                                         </span>
                                     </div>
                                     
                                     {review.comment && (
-                                        <p style={{ fontSize: '14px', color: '#334155', lineHeight: 1.5, marginBottom: '0' }}>
+                                        <p style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: '0' }}>
                                             {review.comment}
                                         </p>
                                     )}
@@ -900,7 +901,7 @@ const ReviewModal = ({ product, reviews, token, onClose, onRefresh, showNotifica
                                         onClick={() => deleteReview(review.id)}
                                         style={{
                                             position: 'absolute', top: '16px', right: '16px',
-                                            background: '#fee2e2', border: 'none', color: '#dc2626',
+                                            background: 'rgba(239, 68, 68, 0.1)', border: 'none', color: 'var(--accent-red)',
                                             width: '24px', height: '24px', borderRadius: '4px',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                                             cursor: 'pointer', fontSize: '12px'

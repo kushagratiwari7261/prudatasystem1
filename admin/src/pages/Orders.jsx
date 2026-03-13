@@ -5,15 +5,15 @@ import styles from './Orders.module.css';
 const API = 'http://localhost:5000/api/v1';
 
 const VALID_NEXT = {
-    pending: ['confirmed', 'cancelled'],
-    confirmed: ['processing', 'cancelled'],
-    processing: ['packed', 'cancelled'],
-    packed: ['shipped', 'cancelled'],
-    shipped: ['out_for_delivery'],
-    out_for_delivery: ['delivered'],
-    delivered: [],
-    cancelled: [],
-    refunded: []
+    pending: ['pending', 'confirmed', 'cancelled'],
+    confirmed: ['confirmed', 'processing', 'cancelled'],
+    processing: ['processing', 'packed', 'cancelled'],
+    packed: ['packed', 'shipped', 'cancelled'],
+    shipped: ['shipped', 'out_for_delivery'],
+    out_for_delivery: ['out_for_delivery', 'delivered'],
+    delivered: ['delivered'],
+    cancelled: ['cancelled'],
+    refunded: ['refunded']
 };
 
 const STATUS_COLORS = {

@@ -9,7 +9,8 @@ const { esClient, esAvailable } = require('../config/elasticsearch');
 const getAll = async (req, res, next) => {
     try {
         const {
-            category, brand, min_price, max_price, rating, tags, featured, sort, page = 1, limit = 10
+            category, brand, min_price, max_price, rating, tags, featured, sort, page = 1, limit = 10,
+            colors, sizes, search
         } = req.query;
 
         let whereClause = 'p.is_active = true';
@@ -21,8 +22,9 @@ const getAll = async (req, res, next) => {
             values.push(category);
         }
         if (brand) {
-            whereClause += ` AND b.slug = $${paramCount++}`;
-            values.push(brand);
+            const brandArray = brand.split(',');
+            whereClause += ` AND b.slug = ANY($${paramCount++})`;
+            values.push(brandArray);
         }
         if (min_price) {
             whereClause += ` AND (p.discount_price >= $${paramCount} OR (p.discount_price IS NULL AND p.base_price >= $${paramCount}))`;
@@ -46,6 +48,21 @@ const getAll = async (req, res, next) => {
         if (featured) {
             whereClause += ` AND p.is_featured = $${paramCount++}`;
             values.push(featured === 'true');
+        }
+        if (colors) {
+            const colorArray = colors.split(',');
+            whereClause += ` AND EXISTS (SELECT 1 FROM product_variants pv2 WHERE pv2.product_id = p.id AND pv2.color = ANY($${paramCount++}))`;
+            values.push(colorArray);
+        }
+        if (sizes) {
+            const sizeArray = sizes.split(',');
+            whereClause += ` AND EXISTS (SELECT 1 FROM product_variants pv3 WHERE pv3.product_id = p.id AND pv3.size = ANY($${paramCount++}))`;
+            values.push(sizeArray);
+        }
+        if (search) {
+            whereClause += ` AND (p.title ILIKE $${paramCount} OR p.description ILIKE $${paramCount} OR b.name ILIKE $${paramCount} OR c.name ILIKE $${paramCount})`;
+            values.push(`%${search}%`);
+            paramCount++;
         }
 
         let orderBy = 'p.created_at DESC';
@@ -390,6 +407,55 @@ const uploadImages = async (req, res, next) => {
     }
 };
 
+const getSuggestions = async (req, res, next) => {
+    try {
+        const { q } = req.query;
+        if (!q || q.length < 2) {
+            return sendSuccess(res, []);
+        }
+
+        const query = `
+            SELECT p.id, p.title, p.slug, p.images, c.name as category_name
+            FROM products p
+            LEFT JOIN categories c ON c.id = p.category_id
+            WHERE p.is_active = true 
+            AND (p.title ILIKE $1 OR c.name ILIKE $1)
+            ORDER BY p.rating_count DESC
+            LIMIT 6
+        `;
+        const { rows } = await db.query(query, [`%${q}%`]);
+        sendSuccess(res, rows);
+    } catch (err) {
+        next(err);
+    }
+};
+
+const getFilterOptions = async (req, res, next) => {
+    try {
+        const brands = await db.query('SELECT name, slug FROM brands WHERE is_active = true ORDER BY name ASC');
+        const categories = await db.query('SELECT name, slug FROM categories WHERE is_active = true ORDER BY name ASC');
+        
+        // Get unique colors and sizes from variants
+        const variantsInfo = await db.query(`
+            SELECT DISTINCT color, size 
+            FROM product_variants 
+            WHERE is_active = true
+        `);
+
+        const colors = [...new Set(variantsInfo.rows.map(r => r.color).filter(Boolean))].sort();
+        const sizes = [...new Set(variantsInfo.rows.map(r => r.size).filter(Boolean))].sort();
+
+        sendSuccess(res, {
+            brands: brands.rows,
+            categories: categories.rows,
+            colors,
+            sizes
+        });
+    } catch (err) {
+        next(err);
+    }
+};
+
 module.exports = {
-    getAll, getBySlug, getRelated, create, update, remove, uploadImages
+    getAll, getBySlug, getRelated, create, update, remove, uploadImages, getSuggestions, getFilterOptions
 };

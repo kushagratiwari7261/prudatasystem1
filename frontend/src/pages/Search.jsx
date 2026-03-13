@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
+import SkeletonCard from '../components/SkeletonCard';
+import ProductCard from '../components/ProductCard';
 
 const API = 'http://localhost:5000/api/v1';
 
@@ -55,7 +57,9 @@ const Search = () => {
 
             {/* Results */}
             {loading ? (
-                <div className="spinner-container"><div className="spinner" /></div>
+                <div className="product-grid">
+                    {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+                </div>
             ) : !query ? (
                 <div style={{ textAlign: 'center', padding: '40px 0' }}>
                     <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '12px', marginTop: '24px' }}>
@@ -90,39 +94,15 @@ const Search = () => {
                 </div>
             ) : (
                 <>
-                    <div className="sort-bar">
+                    <div className="sort-bar" style={{ marginBottom: '20px' }}>
                         <div className="results-count">
                             Found <strong>{products.length}</strong> results for "<strong>{query}</strong>"
                         </div>
                     </div>
                     <div className="product-grid">
-                        {products.map(p => {
-                            const imgUrl = p.images?.[0]?.url || p.images?.[0] || `https://picsum.photos/seed/${p.id}/400/530`;
-                            const price = p.variants?.[0]?.price || p.price || 999;
-                            const mrp = p.variants?.[0]?.mrp || p.mrp || Math.round(price * 1.5);
-                            const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
-
-                            return (
-                                <Link to={`/products/${p.slug || p.id}`} key={p.id} className="product-card">
-                                    <div className="product-card-image">
-                                        <img src={imgUrl} alt={p.name} loading="lazy" />
-                                    </div>
-                                    <div className="product-card-info">
-                                        <div className="product-card-brand">{p.brand?.name || p.brand || 'ZENWAIR'}</div>
-                                        <div className="product-card-name">{p.name}</div>
-                                        <div className="product-card-price">
-                                            <span className="price-current">₹{price}</span>
-                                            {discount > 0 && (
-                                                <>
-                                                    <span className="price-original">₹{mrp}</span>
-                                                    <span className="price-off">({discount}% OFF)</span>
-                                                </>
-                                            )}
-                                        </div>
-                                    </div>
-                                </Link>
-                            );
-                        })}
+                        {products.map(p => (
+                            <ProductCard key={p.id} product={p} />
+                        ))}
                     </div>
                 </>
             )}

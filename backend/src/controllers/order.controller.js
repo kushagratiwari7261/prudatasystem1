@@ -83,11 +83,23 @@ const getOrderById = async (req, res, next) => {
             }
         }
 
-        // Get items
+        // Get items with user reviews if applicable
         const itemsResult = await db.query(
             'SELECT * FROM order_items WHERE order_id = $1',
             [id]
         );
+        
+        const productIds = itemsResult.rows.map(item => item.product_id);
+        let userReviews = [];
+        
+        if (req.user.role !== 'admin' && productIds.length > 0) {
+            const reviewResult = await db.query(
+                'SELECT * FROM reviews WHERE user_id = $1 AND product_id = ANY($2)',
+                [req.user.id, productIds]
+            );
+            userReviews = reviewResult.rows;
+        }
+
         const items = itemsResult.rows.map(item => {
             let snapshot = {};
             try {
@@ -95,13 +107,15 @@ const getOrderById = async (req, res, next) => {
                     ? JSON.parse(item.product_snapshot)
                     : (item.product_snapshot || {});
             } catch { /* ignore */ }
+            
             return {
                 ...item,
                 product_name: snapshot.title || 'Product',
                 image_url: snapshot.image || null,
                 size: snapshot.size || null,
                 color: snapshot.color || null,
-                subtotal: parseFloat(item.price) * parseInt(item.quantity)
+                subtotal: parseFloat(item.price) * parseInt(item.quantity),
+                user_review: userReviews.find(r => r.product_id === item.product_id) || null
             };
         });
 
@@ -273,7 +287,7 @@ const getAllOrders = async (req, res, next) => {
             `SELECT o.id, o.status, o.total_amount, o.items_total, 
               o.discount_amount, o.shipping_charge, o.coupon_code,
               o.payment_method, o.payment_status, o.created_at,
-              u.name as customer_name, u.email as customer_email,
+              u.name as user_name, u.email as user_email,
               COUNT(oi.id) as item_count
        FROM orders o
        JOIN users u ON u.id = o.user_id
@@ -301,7 +315,7 @@ const getAdminStats = async (req, res, next) => {
                 (SELECT COUNT(*) FROM orders) as total_orders,
                 (SELECT COUNT(*) FROM orders WHERE status = 'pending') as pending_orders,
                 (SELECT COALESCE(SUM(total_amount), 0) FROM orders WHERE payment_status = 'paid') as revenue,
-                (SELECT COUNT(*) FROM users WHERE role = 'user') as total_customers
+                (SELECT COUNT(*) FROM users WHERE role = 'customer') as total_customers
         `);
 
         sendSuccess(res, {

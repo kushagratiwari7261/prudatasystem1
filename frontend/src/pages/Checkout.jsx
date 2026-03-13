@@ -34,7 +34,7 @@ const Checkout = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [cityOptions, setCityOptions] = useState([]);
     const [newAddress, setNewAddress] = useState({
-        full_name: '',
+        full_name: JSON.parse(localStorage.getItem('user') || '{}')?.name || '',
         phone: '',
         line1: '',
         line2: '',
@@ -47,6 +47,7 @@ const Checkout = () => {
     });
     const navigate = useNavigate();
     const token = localStorage.getItem('accessToken');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
 
     // Load Razorpay script dynamically
     useEffect(() => {
@@ -155,7 +156,7 @@ const Checkout = () => {
                 setSelectedAddress(addr.id);
                 setShowAddForm(false);
                 setNewAddress({
-                    full_name: '', phone: '', line1: '', line2: '',
+                    full_name: user?.name || '', phone: '', line1: '', line2: '',
                     landmark: '', city: '', state: '', pincode: '',
                     label: 'Home', is_default: false
                 });

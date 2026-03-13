@@ -86,4 +86,6 @@ const restrictTo = (...roles) => {
     };
 };
 
-module.exports = { protect, optionalAuth, restrictTo };
+const adminOnly = restrictTo('admin');
+
+module.exports = { protect, optionalAuth, restrictTo, adminOnly };

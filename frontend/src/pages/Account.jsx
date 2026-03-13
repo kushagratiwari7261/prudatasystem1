@@ -17,7 +17,7 @@ const Account = () => {
     const [showAddForm, setShowAddForm] = useState(false);
     const [cityOptions, setCityOptions] = useState([]);
     const [newAddress, setNewAddress] = useState({
-        full_name: '', phone: '', line1: '', line2: '',
+        full_name: user?.name || '', phone: '', line1: '', line2: '',
         landmark: '', city: '', state: '', pincode: '',
         label: 'Home', is_default: false
     });
@@ -145,7 +145,7 @@ const Account = () => {
                 });
                 setShowAddForm(false);
                 setNewAddress({
-                    full_name: '', phone: '', line1: '', line2: '',
+                    full_name: user?.name || '', phone: '', line1: '', line2: '',
                     landmark: '', city: '', state: '', pincode: '',
                     label: 'Home', is_default: false
                 });

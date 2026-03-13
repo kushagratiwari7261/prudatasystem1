@@ -33,21 +33,34 @@ const OrderTracking = () => {
     
     const token = localStorage.getItem('accessToken');
 
+    const fetchOrder = async () => {
+        try {
+            const res = await fetch(`${API}/orders/${id}`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const d = await res.json();
+            setOrder(d.data || d);
+            setLoading(false);
+        } catch (err) {
+            console.error('Fetch order error:', err);
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
-        fetch(`${API}/orders/${id}`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-        })
-            .then(r => r.json())
-            .then(d => {
-                setOrder(d.data || d);
-                setLoading(false);
-            })
-            .catch(() => setLoading(false));
+        fetchOrder();
     }, [id, token]);
 
     const handleOpenReview = (item) => {
         setReviewProduct(item);
-        setReviewData({ rating: 5, comment: '' });
+        if (item.user_review) {
+            setReviewData({
+                rating: item.user_review.rating,
+                comment: item.user_review.comment || ''
+            });
+        } else {
+            setReviewData({ rating: 5, comment: '' });
+        }
         setReviewModalOpen(true);
     };
 
@@ -71,8 +84,9 @@ const OrderTracking = () => {
             });
             const data = await res.json();
             if (data.success) {
-                alert('Thank you for your review!');
+                toast?.success ? toast.success('Review updated!') : alert('Thank you for your review!');
                 setReviewModalOpen(false);
+                fetchOrder(); // Refresh to show new review content
             } else {
                 alert(data.message || 'Failed to submit review');
             }
@@ -141,15 +155,37 @@ const OrderTracking = () => {
                             {statusOrder.map((s, idx) => {
                                 const isActive = idx <= currentStep;
                                 const isCurrent = idx === currentStep;
+                                
+                                // Group any history logs belonging to this status step
+                                const historyLogs = (order.status_history || []).filter(h => h.status === s);
+
                                 return (
                                     <div key={s} className={`tracking-step ${isActive ? 'active' : ''} ${isCurrent ? 'current' : ''}`}>
                                         <div className="tracking-step-dot" />
                                         <div className="tracking-step-title">{statusLabels[s]}</div>
-                                        <div className="tracking-step-date">
-                                            {isActive
-                                                ? (isCurrent ? 'Current Status' : '✓ Completed')
-                                                : 'Upcoming'}
-                                        </div>
+                                        
+                                        {/* Render history logs if any exist for this status, else show default state */}
+                                        {historyLogs.length > 0 ? (
+                                            <div className="tracking-step-logs" style={{ marginTop: '8px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                {historyLogs.map((log, i) => (
+                                                    <div key={i} style={{ fontSize: '12px', background: '#f8fafc', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                                        <div style={{ color: '#64748b', fontWeight: 600, marginBottom: '2px' }}>
+                                                            {new Date(log.created_at).toLocaleString('en-IN', {
+                                                                day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                            })}
+                                                        </div>
+                                                        {log.location && <div style={{ fontWeight: 600, color: '#0f172a' }}>📍 {log.location}</div>}
+                                                        {log.note && <div style={{ color: '#334155', marginTop: '2px' }}>{log.note}</div>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        ) : (
+                                            <div className="tracking-step-date">
+                                                {isActive
+                                                    ? (isCurrent ? 'Current Status' : '✓ Completed')
+                                                    : 'Upcoming'}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
@@ -180,15 +216,25 @@ const OrderTracking = () => {
                                     <div style={{ fontSize: '13px', color: '#94969f' }}>
                                         {item.size && `Size: ${item.size}`} {item.quantity && `• Qty: ${item.quantity}`}
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                                        <div style={{ fontWeight: 700 }}>₹{item.price || item.total || 0}</div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '6px' }}>
+                                        <div>
+                                            <div style={{ fontWeight: 700 }}>₹{item.price || item.total || 0}</div>
+                                            {item.user_review && (
+                                                <div style={{ marginTop: '8px', fontSize: '12px', background: '#f8fafc', padding: '8px', borderRadius: '4px', border: '1px solid #e2e8f0' }}>
+                                                    <div style={{ color: '#ff9900', fontWeight: 700, marginBottom: '2px' }}>
+                                                        {'★'.repeat(item.user_review.rating)}{'☆'.repeat(5 - item.user_review.rating)}
+                                                    </div>
+                                                    {item.user_review.comment && <div style={{ color: '#535766', fontStyle: 'italic' }}>"{item.user_review.comment}"</div>}
+                                                </div>
+                                            )}
+                                        </div>
                                         {status === 'delivered' && (
                                             <button 
                                                 className="btn-secondary" 
-                                                style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid #ff3f6c', color: '#ff3f6c', backgroundColor: 'transparent' }}
+                                                style={{ padding: '6px 12px', fontSize: '12px', border: '1px solid #ff3f6c', color: '#ff3f6c' }}
                                                 onClick={() => handleOpenReview(item)}
                                             >
-                                                ★ Rate & Review
+                                                {item.user_review ? '✎ Edit Review' : '★ Rate & Review'}
                                             </button>
                                         )}
                                     </div>
@@ -270,7 +316,7 @@ const OrderTracking = () => {
                 <div className="modal-overlay">
                     <div className="modal" style={{ maxWidth: '400px', width: '90%' }}>
                         <div className="modal-header">
-                            <h3 className="modal-title">Rate Product</h3>
+                            <h3 className="modal-title">{reviewProduct.user_review ? 'Edit Your Review' : 'Rate Product'}</h3>
                             <button className="modal-close" onClick={() => setReviewModalOpen(false)}>×</button>
                         </div>
                         <form onSubmit={handleSubmitReview} className="modal-body">

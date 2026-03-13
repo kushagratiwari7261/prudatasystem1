@@ -34,6 +34,8 @@ const upload = multer({
 });
 
 router.get('/', productController.getAll);
+router.get('/filters', productController.getFilterOptions);
+router.get('/suggestions', productController.getSuggestions);
 router.get('/:slug', productController.getBySlug);
 router.get('/:id/related', productController.getRelated);
 

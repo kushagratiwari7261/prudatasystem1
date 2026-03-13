@@ -66,36 +66,36 @@ const Inventory = () => {
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar />
-            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: '#f1f5f9' }}>
+            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: 'var(--bg-main)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>Inventory Management</h1>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>Monitor low stock products and manually adjust quantities.</p>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Inventory Management</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>Monitor low stock products and manually adjust quantities.</p>
                     </div>
                 </div>
 
                 {/* Adjust Modal (Simulated inline) */}
                 {adjustModal.open && (
-                    <div style={{ background: 'white', padding: '24px', borderRadius: '14px', marginBottom: '24px', border: '1px solid #3b82f6', boxShadow: '0 4px 6px rgba(59,130,246,0.1)' }}>
-                        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: '#1e40af' }}>
+                    <div style={{ background: 'var(--bg-card)', padding: '24px', borderRadius: '14px', marginBottom: '24px', border: '1px solid var(--accent-blue)', boxShadow: 'var(--shadow-md)' }}>
+                        <h2 style={{ fontSize: '18px', marginBottom: '20px', color: 'var(--accent-blue)' }}>
                             Adjust Stock: {adjustModal.variant.name} (Size: {adjustModal.variant.size})
                         </h2>
                         <form onSubmit={handleAdjustStock} style={{ display: 'flex', gap: '16px', alignItems: 'end' }}>
                             <div>
-                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600 }}>New Exact Quantity</label>
+                                <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>New Exact Quantity</label>
                                 <input 
                                     type="number"
                                     min="0"
                                     value={adjustModal.qty}
                                     onChange={(e) => setAdjustModal(prev => ({ ...prev, qty: e.target.value }))}
                                     required 
-                                    style={{ width: '200px', padding: '10px', borderRadius: '6px', border: '1px solid #cbd5e1', fontSize: '16px', fontWeight: 'bold' }} 
+                                    style={{ width: '200px', padding: '10px', borderRadius: '6px', border: '1px solid var(--border-color)', background: 'var(--input-bg)', color: 'var(--text-primary)', fontSize: '16px', fontWeight: 'bold' }} 
                                 />
                             </div>
-                            <button type="submit" style={{ background: '#3b82f6', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '42px' }}>
+                            <button type="submit" style={{ background: 'var(--accent-blue)', color: 'white', padding: '10px 24px', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '42px' }}>
                                 Confirm Update
                             </button>
-                            <button type="button" onClick={() => setAdjustModal({ open: false, variant: null, qty: 0 })} style={{ background: '#f1f5f9', color: '#64748b', padding: '10px 24px', border: '1px solid #cbd5e1', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '42px' }}>
+                            <button type="button" onClick={() => setAdjustModal({ open: false, variant: null, qty: 0 })} style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', padding: '10px 24px', border: '1px solid var(--border-color)', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', height: '42px' }}>
                                 Cancel
                             </button>
                         </form>
@@ -105,53 +105,53 @@ const Inventory = () => {
 
                 {/* Low Stock Watchlist */}
                 <div style={{
-                    background: 'white',
+                    background: 'var(--bg-card)',
                     borderRadius: '14px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                    border: '1px solid #e2e8f0',
+                    boxShadow: 'var(--shadow-sm)',
+                    border: '1px solid var(--border-color)',
                     overflowX: 'auto',
                     marginBottom: '40px'
                 }}>
-                    <div style={{ padding: '20px 24px', borderBottom: '1px solid #e2e8f0', background: '#fffbeb' }}>
+                    <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-color)', background: 'var(--bg-hover)' }}>
                         <h2 style={{ fontSize: '16px', fontWeight: 800, color: '#f59e0b', display: 'flex', alignItems: 'center', gap: '8px' }}>
                             ⚠️ Low Stock Alerts (Below 20 units)
                         </h2>
                     </div>
 
                     {loading ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Scanning warehouse...</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Scanning warehouse...</div>
                     ) : error ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--accent-red)' }}>{error}</div>
                     ) : lowStock.length === 0 ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#10b981', fontWeight: 'bold' }}>All stock levels are optimal! No immediate action required.</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--accent-green)', fontWeight: 'bold' }}>All stock levels are optimal! No immediate action required.</div>
                     ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
                             <thead>
-                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
                                     {['Product Info', 'SKU', 'Variant Details', 'Current Stock', 'Status', 'Action'].map(h => (
-                                        <th key={h} style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase' }}>{h}</th>
+                                        <th key={h} style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase' }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {lowStock.map(item => (
-                                    <tr key={item.variant_id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 800, color: '#0f172a' }}>
+                                    <tr key={item.variant_id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 800, color: 'var(--text-primary)' }}>
                                             {item.name}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '13px', color: '#64748b' }}>
+                                        <td style={{ padding: '16px', fontSize: '13px', color: 'var(--text-secondary)' }}>
                                             {item.sku}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '14px', color: '#3b82f6', fontWeight: 700 }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', color: 'var(--accent-blue)', fontWeight: 700 }}>
                                             {item.color} — Size: {item.size}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '20px', fontWeight: 900, color: item.stock_quantity <= 5 ? '#ef4444' : '#f59e0b' }}>
+                                        <td style={{ padding: '16px', fontSize: '20px', fontWeight: 900, color: item.stock_quantity <= 5 ? 'var(--accent-red)' : '#f59e0b' }}>
                                             {item.stock_quantity}
                                         </td>
                                         <td style={{ padding: '16px', fontSize: '13px' }}>
                                             <span style={{
-                                                background: item.stock_quantity === 0 ? '#fee2e2' : '#fef3c7',
-                                                color: item.stock_quantity === 0 ? '#ef4444' : '#d97706',
+                                                background: item.stock_quantity === 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                                                color: item.stock_quantity === 0 ? 'var(--accent-red)' : '#d97706',
                                                 padding: '4px 10px', borderRadius: '6px', fontWeight: 700, textTransform: 'uppercase'
                                             }}>
                                                 {item.stock_quantity === 0 ? 'Out of Stock' : 'Low Stock'}
@@ -160,7 +160,7 @@ const Inventory = () => {
                                         <td style={{ padding: '16px' }}>
                                             <button 
                                                 onClick={() => setAdjustModal({ open: true, variant: item, qty: item.stock_quantity })}
-                                                style={{ padding: '8px 16px', background: '#0f172a', color: 'white', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+                                                style={{ padding: '8px 16px', background: 'var(--text-primary)', color: 'var(--bg-main)', border: 'none', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
                                             >
                                                 Adjust Quantity
                                             </button>

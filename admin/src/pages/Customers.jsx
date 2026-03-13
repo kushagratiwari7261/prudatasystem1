@@ -36,55 +36,55 @@ const Customers = () => {
     return (
         <div style={{ display: 'flex' }}>
             <Sidebar />
-            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: '#f1f5f9' }}>
+            <main style={{ marginLeft: 240, flex: 1, padding: '32px', minHeight: '100vh', background: 'var(--bg-main)' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: '#0f172a', marginBottom: '8px' }}>Customers</h1>
-                        <p style={{ color: '#64748b', fontSize: '14px' }}>View all registered users on your platform.</p>
+                        <h1 style={{ fontSize: '24px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>Customers</h1>
+                        <p style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>View all registered users on your platform.</p>
                     </div>
                 </div>
 
                 <div style={{
-                    background: 'white',
+                    background: 'var(--bg-card)',
                     borderRadius: '14px',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                    border: '1px solid #e2e8f0',
+                    boxShadow: 'var(--shadow-sm)',
+                    border: '1px solid var(--border-color)',
                     overflowX: 'auto'
                 }}>
                     {loading ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>Loading customer data...</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>Loading customer data...</div>
                     ) : error ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#ef4444' }}>{error}</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--accent-red)' }}>{error}</div>
                     ) : customers.length === 0 ? (
-                        <div style={{ padding: '40px', textAlign: 'center', color: '#94a3b8' }}>No customers found</div>
+                        <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>No customers found</div>
                     ) : (
                         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
                             <thead>
-                                <tr style={{ background: '#f8fafc', borderBottom: '1px solid #e2e8f0' }}>
+                                <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-color)' }}>
                                     {['Name', 'Email', 'Phone', 'Gender', 'Role', 'Status', 'Joined Date'].map(h => (
-                                        <th key={h} style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
+                                        <th key={h} style={{ padding: '16px', textAlign: 'left', fontSize: '12px', fontWeight: 600, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
                             <tbody>
                                 {customers.map(customer => (
-                                    <tr key={customer.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: '#0f172a' }}>
+                                    <tr key={customer.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', fontWeight: 600, color: 'var(--text-primary)' }}>
                                             {customer.name}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '14px', color: '#475569' }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
                                             {customer.email}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '14px', color: '#475569' }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
                                             {customer.phone || '—'}
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '14px', color: '#475569' }}>
+                                        <td style={{ padding: '16px', fontSize: '14px', color: 'var(--text-secondary)' }}>
                                             {customer.gender || '—'}
                                         </td>
                                         <td style={{ padding: '16px' }}>
                                             <span style={{
-                                                background: customer.role === 'admin' ? '#fecdd3' : '#e0e7ff',
-                                                color: customer.role === 'admin' ? '#be123c' : '#4338ca',
+                                                background: customer.role === 'admin' ? 'rgba(225, 29, 72, 0.1)' : 'rgba(79, 70, 229, 0.1)',
+                                                color: customer.role === 'admin' ? '#be123c' : 'rgba(79, 70, 229, 1)',
                                                 padding: '4px 10px',
                                                 borderRadius: '6px',
                                                 fontSize: '11px',
@@ -96,8 +96,8 @@ const Customers = () => {
                                         </td>
                                         <td style={{ padding: '16px' }}>
                                             <span style={{
-                                                background: customer.is_active ? '#dcfce7' : '#fee2e2',
-                                                color: customer.is_active ? '#15803d' : '#b91c1c',
+                                                background: customer.is_active ? 'rgba(22, 163, 74, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                                color: customer.is_active ? 'var(--accent-green)' : 'var(--accent-red)',
                                                 padding: '4px 10px',
                                                 borderRadius: '6px',
                                                 fontSize: '11px',
@@ -107,7 +107,7 @@ const Customers = () => {
                                                 {customer.is_active ? 'Active' : 'Inactive'}
                                             </span>
                                         </td>
-                                        <td style={{ padding: '16px', fontSize: '13px', color: '#64748b' }}>
+                                        <td style={{ padding: '16px', fontSize: '13px', color: 'var(--text-muted)' }}>
                                             {new Date(customer.created_at).toLocaleDateString()}
                                         </td>
                                     </tr>

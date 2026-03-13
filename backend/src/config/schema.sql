@@ -352,6 +352,20 @@ CREATE TABLE reviews (
 );
 
 -- ============================================================
+-- WISHLISTS TABLE
+-- ============================================================
+CREATE TABLE wishlists (
+  id          UUID PRIMARY KEY
+              DEFAULT uuid_generate_v4(),
+  user_id     UUID NOT NULL
+              REFERENCES users(id) ON DELETE CASCADE,
+  product_id  UUID NOT NULL
+              REFERENCES products(id) ON DELETE CASCADE,
+  created_at  TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(user_id, product_id)
+);
+
+-- ============================================================
 -- ALL INDEXES FOR SPEED
 -- ============================================================
 
@@ -466,6 +480,10 @@ CREATE INDEX idx_reviews_user
   ON reviews(user_id);
 CREATE INDEX idx_reviews_status
   ON reviews(status);
+
+-- wishlists
+CREATE INDEX idx_wishlists_user
+  ON wishlists(user_id);
 
 -- ============================================================
 -- SEED DATA

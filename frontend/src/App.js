@@ -17,6 +17,7 @@ import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import OrderTracking from './pages/OrderTracking';
 import Account from './pages/Account';
+import Wishlist from './pages/Wishlist';
 import NotFound from './pages/NotFound';
 
 function App() {
@@ -77,6 +78,12 @@ function App() {
                     <Route path="/account/*" element={
                         <ProtectedRoute>
                             <Account />
+                        </ProtectedRoute>
+                    } />
+
+                    <Route path="/wishlist" element={
+                        <ProtectedRoute>
+                            <Wishlist />
                         </ProtectedRoute>
                     } />
 

@@ -1,31 +1,31 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useSearchParams, useNavigate } from 'react-router-dom';
+import { useSearchParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import ProductCard from '../components/ProductCard';
+import SkeletonCard from '../components/SkeletonCard';
 
 const API = 'http://localhost:5000/api/v1';
-
-const localProductImages = [
-    '/images/products/tshirt_black.png',
-    '/images/products/dress_pink.png',
-    '/images/products/jeans_dark.png',
-    '/images/products/hoodie_navy.png',
-    '/images/products/kurta_saffron.png',
-    '/images/products/sneakers_white.png',
-    '/images/products/jacket_olive.png',
-];
 
 const Shop = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [categories, setCategories] = useState([]);
+    const [availableFilters, setAvailableFilters] = useState({
+        categories: [],
+        brands: [],
+        colors: [],
+        sizes: []
+    });
     const [addingToCart, setAddingToCart] = useState(false);
     const [sortBy, setSortBy] = useState('newest');
+    const [wishlistIds, setWishlistIds] = useState(new Set());
     const [filters, setFilters] = useState({
         category: searchParams.get('category') || '',
+        brands: searchParams.get('brands') ? searchParams.get('brands').split(',') : [],
         minPrice: '',
-        maxPrice: '',
-        sizes: [],
+        maxPrice: searchParams.get('maxPrice') || '',
+        sizes: searchParams.get('sizes') ? searchParams.get('sizes').split(',') : [],
+        colors: searchParams.get('colors') ? searchParams.get('colors').split(',') : [],
     });
     const [page, setPage] = useState(1);
     const [total, setTotal] = useState(0);
@@ -39,18 +39,35 @@ const Shop = () => {
             params.set('page', page);
             params.set('limit', limit);
             if (filters.category) params.set('category', filters.category);
-            if (filters.minPrice) params.set('minPrice', filters.minPrice);
-            if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
-            if (sortBy === 'price_asc') { params.set('sortBy', 'price'); params.set('order', 'asc'); }
-            if (sortBy === 'price_desc') { params.set('sortBy', 'price'); params.set('order', 'desc'); }
-            if (sortBy === 'newest') { params.set('sortBy', 'createdAt'); params.set('order', 'desc'); }
-            if (sortBy === 'rating') { params.set('sortBy', 'rating'); params.set('order', 'desc'); }
+            if (filters.brands.length > 0) params.set('brand', filters.brands.join(','));
+            if (filters.colors.length > 0) params.set('colors', filters.colors.join(','));
+            if (filters.sizes.length > 0) params.set('sizes', filters.sizes.join(','));
+            if (filters.minPrice) params.set('min_price', filters.minPrice);
+            if (filters.maxPrice) params.set('max_price', filters.maxPrice);
+            
+            if (sortBy === 'price_asc') params.set('sort', 'price_asc');
+            else if (sortBy === 'price_desc') params.set('sort', 'price_desc');
+            else if (sortBy === 'newest') params.set('sort', 'newest');
+            else if (sortBy === 'rating') params.set('sort', 'popular');
+            else if (sortBy === 'popular') params.set('sort', 'popular');
 
             const res = await fetch(`${API}/products?${params}`);
             const data = await res.json();
             const productList = data.data?.products || data.data || [];
             setProducts(productList);
-            setTotal(data.data?.total || data.total || productList.length);
+            setTotal(data.data?.pagination?.total || data.data?.total || productList.length);
+
+            // Fetch wishlist if logged in
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+                const wishlistRes = await fetch(`${API}/wishlist`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const wishlistData = await wishlistRes.json();
+                if (wishlistData.success) {
+                    setWishlistIds(new Set((wishlistData.data || []).map(p => p.id)));
+                }
+            }
         } catch (err) {
             console.error('Failed to fetch products:', err);
         }
@@ -68,27 +85,41 @@ const Shop = () => {
     }, [searchParams]);
 
     useEffect(() => {
-        fetch(`${API}/categories`)
+        // Fetch Filter Options
+        fetch(`${API}/products/filters`)
             .then(r => r.json())
-            .then(d => setCategories(d.data || []))
+            .then(d => {
+                if (d.success) setAvailableFilters(d.data);
+            })
             .catch(() => { });
     }, []);
 
-    const handleCategoryChange = (slug) => {
-        setFilters(prev => ({ ...prev, category: prev.category === slug ? '' : slug }));
+    const handleFilterToggle = (type, value) => {
+        setFilters(prev => {
+            const current = [...prev[type]];
+            const updated = current.includes(value)
+                ? current.filter(item => item !== value)
+                : [...current, value];
+            
+            const newFilters = { ...prev, [type]: updated };
+            
+            // Update URL
+            if (updated.length > 0) searchParams.set(type === 'brands' ? 'brands' : type, updated.join(','));
+            else searchParams.delete(type === 'brands' ? 'brands' : type);
+            setSearchParams(searchParams);
+            
+            return newFilters;
+        });
         setPage(1);
-        if (slug) searchParams.set('category', slug);
-        else searchParams.delete('category');
-        setSearchParams(searchParams);
     };
 
-    const handleSizeToggle = (size) => {
-        setFilters(prev => ({
-            ...prev,
-            sizes: prev.sizes.includes(size)
-                ? prev.sizes.filter(s => s !== size)
-                : [...prev.sizes, size]
-        }));
+    const handleCategoryChange = (slug) => {
+        const newCat = filters.category === slug ? '' : slug;
+        setFilters(prev => ({ ...prev, category: newCat }));
+        setPage(1);
+        if (newCat) searchParams.set('category', newCat);
+        else searchParams.delete('category');
+        setSearchParams(searchParams);
     };
 
     const addToCart = async (product) => {
@@ -180,20 +211,24 @@ const Shop = () => {
             <div className="shop-layout">
                 {/* Sidebar Filters */}
                 <aside className="shop-sidebar">
+                    <div className="filter-section" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <h3 className="filter-title" style={{ marginBottom: 0 }}>Filters</h3>
+                        <button 
+                            onClick={() => {
+                                setFilters({ category: '', brands: [], minPrice: '', maxPrice: '', sizes: [], colors: [] });
+                                setSearchParams({});
+                                setPage(1);
+                            }}
+                            style={{ background: 'none', color: 'var(--primary)', fontSize: '11px', fontWeight: 700, textTransform: 'uppercase', cursor: 'pointer' }}
+                        >
+                            Clear All
+                        </button>
+                    </div>
+
                     <div className="filter-section">
                         <h3 className="filter-title">Categories</h3>
-                        {['men', 'women', 'kids', 'footwear', 'sports', 'accessories'].map(cat => (
-                            <label className="filter-option" key={cat}>
-                                <input
-                                    type="checkbox"
-                                    checked={filters.category === cat}
-                                    onChange={() => handleCategoryChange(cat)}
-                                />
-                                {cat.charAt(0).toUpperCase() + cat.slice(1)}
-                            </label>
-                        ))}
-                        {categories.length > 0 && categories.map(cat => (
-                            <label className="filter-option" key={cat.id}>
+                        {availableFilters.categories.map(cat => (
+                            <label className="filter-option" key={cat.slug}>
                                 <input
                                     type="checkbox"
                                     checked={filters.category === cat.slug}
@@ -205,30 +240,48 @@ const Shop = () => {
                     </div>
 
                     <div className="filter-section">
+                        <h3 className="filter-title">Brands</h3>
+                        {availableFilters.brands.map(brand => (
+                            <label className="filter-option" key={brand.slug}>
+                                <input
+                                    type="checkbox"
+                                    checked={filters.brands.includes(brand.slug)}
+                                    onChange={() => handleFilterToggle('brands', brand.slug)}
+                                />
+                                {brand.name}
+                            </label>
+                        ))}
+                    </div>
+
+                    <div className="filter-section">
                         <h3 className="filter-title">Price Range</h3>
                         <input
                             type="range"
                             className="price-range-input"
                             min="0"
-                            max="5000"
-                            step="100"
-                            value={filters.maxPrice || 5000}
-                            onChange={(e) => setFilters(prev => ({ ...prev, maxPrice: e.target.value }))}
+                            max="10000"
+                            step="500"
+                            value={filters.maxPrice || 10000}
+                            onChange={(e) => {
+                                setFilters(prev => ({ ...prev, maxPrice: e.target.value }));
+                                searchParams.set('maxPrice', e.target.value);
+                                setSearchParams(searchParams);
+                            }}
                         />
                         <div className="price-range-display">
                             <span>₹{filters.minPrice || 0}</span>
-                            <span>₹{filters.maxPrice || '5000+'}</span>
+                            <span>₹{filters.maxPrice || '10000+'}</span>
                         </div>
                     </div>
 
                     <div className="filter-section">
                         <h3 className="filter-title">Size</h3>
                         <div className="filter-sizes">
-                            {sizes.map(size => (
+                            {availableFilters.sizes.map(size => (
                                 <button
                                     key={size}
                                     className={`filter-size-btn ${filters.sizes.includes(size) ? 'active' : ''}`}
-                                    onClick={() => handleSizeToggle(size)}
+                                    onClick={() => handleFilterToggle('sizes', size)}
                                 >
                                     {size}
                                 </button>
@@ -238,48 +291,36 @@ const Shop = () => {
 
                     <div className="filter-section">
                         <h3 className="filter-title">Color</h3>
-                        <div className="filter-color-grid">
-                            {colors.map(color => (
-                                <div
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                            {availableFilters.colors.map(color => (
+                                <button
                                     key={color}
-                                    className="filter-color-swatch"
-                                    style={{ background: color }}
+                                    onClick={() => handleFilterToggle('colors', color)}
+                                    style={{
+                                        width: '28px',
+                                        height: '28px',
+                                        borderRadius: '50%',
+                                        background: color,
+                                        border: filters.colors.includes(color) ? '2px solid var(--primary)' : '1px solid #ddd',
+                                        cursor: 'pointer',
+                                        position: 'relative',
+                                        boxShadow: filters.colors.includes(color) ? '0 0 0 2px white inset' : 'none'
+                                    }}
+                                    title={color}
                                 />
                             ))}
                         </div>
-                    </div>
-
-                    <div className="filter-section">
-                        <h3 className="filter-title">Discount</h3>
-                        {['10', '20', '30', '40', '50'].map(d => (
-                            <label className="filter-option" key={d}>
-                                <input type="checkbox" />
-                                {d}% and above
-                            </label>
-                        ))}
                     </div>
                 </aside>
 
                 {/* Main Content */}
                 <main>
                     {/* Sort Bar */}
-                    <div className="sort-bar">
-                        <div className="results-count">
-                            Showing <strong>{total}</strong> results
-                            {filters.category && <> for <strong>{filters.category}</strong></>}
-                        </div>
-                        <select value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
-                            <option value="newest">Sort by: Newest</option>
-                            <option value="price_asc">Price: Low to High</option>
-                            <option value="price_desc">Price: High to Low</option>
-                            <option value="rating">Customer Rating</option>
-                            <option value="popular">Popularity</option>
-                        </select>
-                    </div>
-
                     {/* Product Grid */}
                     {loading ? (
-                        <div className="spinner-container"><div className="spinner" /></div>
+                        <div className="product-grid">
+                            {Array.from({ length: 8 }).map((_, i) => <SkeletonCard key={i} />)}
+                        </div>
                     ) : products.length === 0 ? (
                         <div className="empty-state">
                             <div className="empty-state-icon">🔍</div>
@@ -295,6 +336,7 @@ const Shop = () => {
                                     product={p}
                                     onAdd={addToCart}
                                     isAdding={addingToCart}
+                                    isWishlistedInitial={wishlistIds.has(p.id)}
                                 />
                             ))}
                         </div>
@@ -359,99 +401,6 @@ const Shop = () => {
                         </div>
                     )}
                 </main>
-            </div>
-        </div>
-    );
-};
-
-const ProductCard = ({ product, onAdd, isAdding }) => {
-    const navigate = useNavigate();
-    const [adding, setAdding] = useState(false);
-
-    const images = product.images || [];
-    const fallbackIdx = Math.abs((product.id || '').toString().split('').reduce((a, c) => a + c.charCodeAt(0), 0)) % localProductImages.length;
-    let imgUrl = localProductImages[fallbackIdx];
-
-    if (product.fallbackImg) {
-        imgUrl = product.fallbackImg;
-    } else if (images.length > 0) {
-        const img = images[0];
-        if (typeof img === 'string') {
-            imgUrl = img.startsWith('/uploads') ? `http://localhost:5000${img}` : (img.startsWith('http') ? img : img);
-        } else if (img?.url) {
-            imgUrl = img.url.startsWith('/') ? `http://localhost:5000${img.url}` : img.url;
-        }
-    }
-
-    const price = product.discount_price || product.variants?.[0]?.price || product.price || product.base_price || 999;
-    const mrp = product.base_price || product.variants?.[0]?.mrp || product.mrp || Math.round(price * 1.5);
-    const discount = mrp > price ? Math.round(((mrp - price) / mrp) * 100) : 0;
-    const rating = product.rating_avg || product.rating || (3.5 + Math.random() * 1.5).toFixed(1);
-    const productName = product.title || product.name || 'Product';
-
-    const handleAddToCart = async (e) => {
-        e.stopPropagation();
-        setAdding(true);
-
-        // Check if product has variants
-        if (!product.variants || product.variants.length === 0) {
-            // Redirect to product page to select variant
-            toast.info('Please select size and color on product page');
-            navigate(`/products/${product.slug || product.id}`);
-            setAdding(false);
-            return;
-        }
-
-        // Call the parent add function
-        await onAdd(product);
-        setAdding(false);
-    };
-
-    const handleCardClick = () => {
-        navigate(`/products/${product.slug || product.id}`);
-    };
-
-    return (
-        <div className="product-card" onClick={handleCardClick}>
-            <div className="product-card-image">
-                <img src={imgUrl} alt={productName} loading="lazy" />
-                <div className="product-card-rating">
-                    <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
-                    {rating}
-                </div>
-            </div>
-
-            <button
-                className="product-card-wishlist"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                </svg>
-            </button>
-
-            <div className="product-card-info">
-                <div className="product-card-brand">{product.brand_name || product.brand?.name || product.brand || 'ZENWAIR'}</div>
-                <div className="product-card-name">{productName}</div>
-                <div className="product-card-price">
-                    <span className="price-current">₹{price}</span>
-                    {discount > 0 && (
-                        <>
-                            <span className="price-original">₹{mrp}</span>
-                            <span className="price-off">({discount}% OFF)</span>
-                        </>
-                    )}
-                </div>
-            </div>
-
-            <div className="product-card-overlay">
-                <button
-                    className="product-card-add-btn"
-                    onClick={handleAddToCart}
-                    disabled={adding || isAdding}
-                >
-                    {adding ? 'Adding...' : 'Add to Bag'}
-                </button>
             </div>
         </div>
     );

@@ -32,6 +32,8 @@ const orderRoutes = require('./src/routes/order.routes');
 const uploadRoutes = require('./src/routes/upload.routes');
 const variantRoutes = require('./src/routes/variant.routes');
 const reviewRoutes = require('./src/routes/review.routes');
+const wishlistRoutes = require('./src/routes/wishlist.routes');
+const analyticsRoutes = require('./src/routes/analytics.routes');
 
 // Controllers that need Socket.io
 const paymentController = require('./src/controllers/payment.controller');
@@ -164,6 +166,8 @@ app.use('/api/v1/orders', orderRoutes);
 app.use('/api/v1/upload', uploadRoutes);
 app.use('/api/v1/variants', variantRoutes);
 app.use('/api/v1/reviews', reviewRoutes);
+app.use('/api/v1/wishlist', wishlistRoutes);
+app.use('/api/v1/analytics', analyticsRoutes);
 
 // 404 handler
 app.all('*', (req, res, next) => {

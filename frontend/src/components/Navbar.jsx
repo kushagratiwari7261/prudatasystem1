@@ -3,11 +3,37 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 
 const Navbar = () => {
     const [searchQuery, setSearchQuery] = useState('');
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [cartCount, setCartCount] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
+
+    // Debounced search suggestions
+    useEffect(() => {
+        if (searchQuery.length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        const timeoutId = setTimeout(async () => {
+            try {
+                const res = await fetch(`http://localhost:5000/api/v1/products/suggestions?q=${encodeURIComponent(searchQuery)}`);
+                const data = await res.json();
+                if (data.success) {
+                    setSuggestions(data.data);
+                    setShowSuggestions(true);
+                }
+            } catch (err) {
+                console.error('Suggestions error:', err);
+            }
+        }, 300);
+
+        return () => clearTimeout(timeoutId);
+    }, [searchQuery]);
 
     useEffect(() => {
         const token = localStorage.getItem('accessToken');
@@ -56,6 +82,7 @@ const Navbar = () => {
     const handleSearch = (e) => {
         e.preventDefault();
         if (searchQuery.trim()) {
+            setShowSuggestions(false);
             navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
         }
     };
@@ -108,7 +135,30 @@ const Navbar = () => {
                         placeholder="Search for products, brands and more"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
+                        onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                        onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                     />
+
+                    {showSuggestions && suggestions.length > 0 && (
+                        <div className="navbar-suggestions">
+                            {suggestions.map(item => (
+                                <Link 
+                                    key={item.id} 
+                                    to={`/products/${item.slug}`}
+                                    className="navbar-suggestion-item"
+                                    onClick={() => setShowSuggestions(false)}
+                                >
+                                    <div className="suggestion-img">
+                                        <img src={item.images?.[0]?.startsWith('/uploads') ? `http://localhost:5000${item.images[0]}` : '/LOGO.png'} alt="" />
+                                    </div>
+                                    <div className="suggestion-info">
+                                        <div className="suggestion-name">{item.title}</div>
+                                        <div className="suggestion-cat">{item.category_name}</div>
+                                    </div>
+                                </Link>
+                            ))}
+                        </div>
+                    )}
                 </form>
 
                 <div className="navbar-actions">
@@ -137,6 +187,13 @@ const Navbar = () => {
                             <path d="M9 14l2 2 4-4" />
                         </svg>
                         <span>Orders</span>
+                    </Link>
+
+                    <Link to="/wishlist" className="navbar-action-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        <span>Wishlist</span>
                     </Link>
 
                     <Link to="/cart" className={`navbar-action-btn ${isAnimating ? 'cart-animating' : ''}`}>

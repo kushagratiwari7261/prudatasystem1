@@ -116,3 +116,55 @@ exports.deleteReview = async (req, res) => {
         res.status(500).json({ success: false, message: 'Failed to delete review' });
     }
 };
+
+exports.getAllReviews = async (req, res) => {
+    try {
+        const { status } = req.query;
+        let whereClause = '';
+        const params = [];
+
+        if (status) {
+            whereClause = 'WHERE r.status = $1';
+            params.push(status);
+        }
+
+        const query = `
+            SELECT r.*, u.name as user_name, u.email as user_email, p.title as product_title, p.slug as product_slug
+            FROM reviews r
+            JOIN users u ON r.user_id = u.id
+            JOIN products p ON r.product_id = p.id
+            ${whereClause}
+            ORDER BY r.created_at DESC
+        `;
+        const result = await db.query(query, params);
+        res.json({ success: true, data: result.rows });
+    } catch (error) {
+        console.error('Error fetching all reviews:', error);
+        res.status(500).json({ success: false, message: 'Failed to fetch reviews' });
+    }
+};
+
+exports.updateReviewStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!['pending', 'approved', 'rejected'].includes(status)) {
+            return res.status(400).json({ success: false, message: 'Invalid status' });
+        }
+
+        const result = await db.query(
+            'UPDATE reviews SET status = $1, updated_at = NOW() WHERE id = $2 RETURNING *',
+            [status, id]
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).json({ success: false, message: 'Review not found' });
+        }
+
+        res.json({ success: true, message: `Review status updated to ${status}`, data: result.rows[0] });
+    } catch (error) {
+        console.error('Error updating review status:', error);
+        res.status(500).json({ success: false, message: 'Failed to update review status' });
+    }
+};

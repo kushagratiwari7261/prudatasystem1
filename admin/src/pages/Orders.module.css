@@ -3,7 +3,7 @@
     flex: 1;
     padding: 32px;
     min-height: 100vh;
-    background: #f1f5f9;
+    background: var(--bg-main);
 }
 
 .header {
@@ -13,7 +13,7 @@
 .title {
     font-size: 24px;
     font-weight: 800;
-    color: #0f172a;
+    color: var(--text-primary);
     margin-bottom: 16px;
 }
 
@@ -28,36 +28,36 @@
     border-radius: 8px;
     font-size: 12px;
     font-weight: 600;
-    background: white;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-card);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .filterBtn:hover {
-    background: #f8fafc;
-    border-color: #cbd5e1;
+    background: var(--bg-hover);
+    border-color: var(--text-muted);
 }
 
 .filterBtn.active {
-    background: #1e40af;
+    background: var(--accent-blue);
     color: white;
-    border-color: #1e40af;
+    border-color: var(--accent-blue);
 }
 
 .tableWrap {
-    background: white;
+    background: var(--bg-card);
     border-radius: 14px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-    border: 1px solid #e2e8f0;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
     overflow-x: auto;
 }
 
 .empty {
     padding: 60px;
     text-align: center;
-    color: #94a3b8;
+    color: var(--text-muted);
     font-size: 14px;
 }
 
@@ -67,7 +67,7 @@
 }
 
 .table thead tr {
-    background: #f8fafc;
+    background: var(--bg-hover);
 }
 
 .table th {
@@ -75,7 +75,7 @@
     text-align: left;
     font-size: 11px;
     font-weight: 700;
-    color: #64748b;
+    color: var(--text-secondary);
     text-transform: uppercase;
     letter-spacing: 0.5px;
     white-space: nowrap;
@@ -84,36 +84,36 @@
 .table td {
     padding: 14px;
     font-size: 13px;
-    color: #374151;
-    border-top: 1px solid #f1f5f9;
+    color: var(--text-primary);
+    border-top: 1px solid var(--border-color);
 }
 
 .table tbody tr:hover {
-    background: #fafbfc;
+    background: var(--bg-secondary);
 }
 
 .mono {
     font-family: 'SF Mono', 'Consolas', monospace;
     font-size: 12px;
     font-weight: 600;
-    color: #0f172a;
+    color: var(--text-primary);
 }
 
 .amount {
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
 }
 
 .date {
     font-size: 12px;
-    color: #94a3b8;
+    color: var(--text-muted);
 }
 
 .updateBtn {
     padding: 6px 14px;
-    background: #eff6ff;
-    color: #1e40af;
-    border: 1px solid #bfdbfe;
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    border: 1px solid rgba(59, 130, 246, 0.2);
     border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
@@ -122,7 +122,7 @@
 }
 
 .updateBtn:hover {
-    background: #dbeafe;
+    background: rgba(59, 130, 246, 0.15);
 }
 
 /* Pagination */
@@ -136,18 +136,18 @@
 
 .pageBtn {
     padding: 8px 16px;
-    background: white;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-primary);
     cursor: pointer;
     transition: all 0.15s;
 }
 
 .pageBtn:hover:not(:disabled) {
-    background: #f8fafc;
+    background: var(--bg-hover);
 }
 
 .pageBtn:disabled {
@@ -157,7 +157,7 @@
 
 .pageInfo {
     font-size: 13px;
-    color: #64748b;
+    color: var(--text-secondary);
 }
 
 /* Modal */
@@ -173,24 +173,24 @@
 }
 
 .modal {
-    background: white;
+    background: var(--bg-card);
     border-radius: 16px;
     padding: 32px;
     max-width: 440px;
     width: 100%;
-    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    box-shadow: var(--shadow-lg);
 }
 
 .modalTitle {
     font-size: 18px;
     font-weight: 700;
-    color: #0f172a;
+    color: var(--text-primary);
     margin-bottom: 4px;
 }
 
 .modalSub {
     font-size: 13px;
-    color: #94a3b8;
+    color: var(--text-muted);
     margin-bottom: 20px;
     font-family: monospace;
 }
@@ -198,7 +198,7 @@
 .modalCurrent {
     margin-bottom: 20px;
     font-size: 13px;
-    color: #64748b;
+    color: var(--text-secondary);
     display: flex;
     align-items: center;
     gap: 8px;
@@ -212,7 +212,7 @@
     display: block;
     font-size: 13px;
     font-weight: 600;
-    color: #374151;
+    color: var(--text-secondary);
     margin-bottom: 6px;
 }
 
@@ -220,17 +220,18 @@
 .modalField input {
     width: 100%;
     padding: 10px 12px;
-    border: 1px solid #e2e8f0;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
-    color: #0f172a;
+    color: var(--text-primary);
+    background: var(--input-bg);
     box-sizing: border-box;
 }
 
 .modalField select:focus,
 .modalField input:focus {
-    border-color: #1e40af;
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .modalActions {
@@ -242,9 +243,9 @@
 .cancelBtn {
     flex: 1;
     padding: 10px;
-    background: #f1f5f9;
-    color: #64748b;
-    border: 1px solid #e2e8f0;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     font-size: 14px;
     font-weight: 600;
@@ -252,13 +253,13 @@
 }
 
 .cancelBtn:hover {
-    background: #e2e8f0;
+    background: var(--bg-hover);
 }
 
 .submitBtn {
     flex: 1;
     padding: 10px;
-    background: #1e40af;
+    background: var(--accent-blue);
     color: white;
     border: none;
     border-radius: 8px;
@@ -269,7 +270,8 @@
 }
 
 .submitBtn:hover:not(:disabled) {
-    background: #1d4ed8;
+    background: var(--accent-blue);
+    opacity: 0.9;
 }
 
 .submitBtn:disabled {
